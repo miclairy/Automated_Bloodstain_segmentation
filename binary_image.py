@@ -24,6 +24,17 @@ col_thresh = cv2.inRange(hsv_img, lower_threshold, upper_threshold)
 kernel = np.ones((3,3),np.uint8)
 erosion = cv2.erode(col_thresh,kernel,iterations = 2)
 dilation = cv2.dilate(erosion, kernel, iterations = 2)
+ret, labels = cv2.connectedComponents(col_thresh)
+
+
+label_hue = np.uint8(179 * labels / np.max(labels))
+blank_ch = 2555 * np.ones_like(label_hue)
+print(len(label_hue), len(blank_ch))
+# labeled_img = cv2.merge([label_hue, blank_ch, blank_ch])
+
+# labeled_img = cv2.cvtColor(label_hue, cv2.COLOR_HSV2BGR)
+
+# labeled_img[label_hue==0] = 0
 
 # Convert the image to grayscale for processing
 # gray = cv2.cvtColor(img_original, cv2.COLOR_BGR2GRAY)
@@ -37,10 +48,9 @@ dilation = cv2.dilate(erosion, kernel, iterations = 2)
 
 while True:
 
-    small = cv2.resize(hsv_img, (0,0), fx=0.125, fy=0.125)
     # small = cv2.pyrDown(gray, dstsize=(width // 2, height // 2))
    # cv2.imshow('Blood Spatter', small)
-    small = cv2.resize(dilation, (0,0), fx=0.125, fy=0.125)
+    small = cv2.resize(label_hue, (0,0), fx=0.125, fy=0.125)
 
     cv2.imshow('Blood Spatter', small)
 
