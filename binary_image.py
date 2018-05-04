@@ -1,9 +1,11 @@
 import cv2
 import numpy as np
 import sys
+import time
 from matplotlib import pyplot as plt
 
 def main():
+    t0 = time.time()
     img_original = cv2.imread('./images/' + sys.argv[1])
     
     hsv_img = cv2.cvtColor(img_original, cv2.COLOR_BGR2HSV)
@@ -21,8 +23,12 @@ def main():
     cv2.drawContours(img_original, contours, -1, (0,0,255), 3)
     analyseContours(contours, img_original)
 
+    t1 = time.time()
+
+    print("time in ms", t1-t0)
     display_result(img_original)
-    cv2.imwrite(sys.argv[1] + " result.jpg", img_original)
+
+    # cv2.imwrite(sys.argv[1] + " result.jpg", img_original)
 
 
 def label_stains(thresh):
@@ -54,9 +60,11 @@ def analyseContours(contours, img_original):
         area += cv2.contourArea(cnt)
         ellipse = fit_ellipse(cnt, img_original)
         angle = ellipse[2] if ellipse else -1
+        count += 1 if ellipse else 0
         #  print("gamma ", angle)
         # cv2.putText(img_original, str(angle), (int(x), int(y)), font, 1, (0,0,0), 2, cv2.LINE_AA)
     # print("mean area:", area / len(contours))
+    print("ellispe count: ", count)
 
 def display_result(img_original) :
     while True:
@@ -86,17 +94,17 @@ def remove_circle_markers(gray, img):
 
 
 def binarize_image(img_original, gray, gray_hsv, hsv_img) :
-    lower_hue = 0.0 / 360
-    upper_hue = 360.0 / 360
-    saturation = 0.2
-    value = 0.1
+    # lower_hue = 0.0 / 360
+    # upper_hue = 360.0 / 360
+    # saturation = 0.2
+    # value = 0.1
 
-    lower_threshold = np.array([lower_hue * 179, saturation * 255, value * 255])
-    upper_threshold = np.array([upper_hue * 179, 255, 255])
+    # lower_threshold = np.array([lower_hue * 179, saturation * 255, value * 255])
+    # upper_threshold = np.array([upper_hue * 179, 255, 255])
 
-    col_thresh = cv2.inRange(hsv_img, lower_threshold, upper_threshold)
+    # col_thresh = cv2.inRange(hsv_img, lower_threshold, upper_threshold)
 
-    blur = cv2.GaussianBlur(img_original, (9,9), 0)
+    # blur = cv2.GaussianBlur(img_original, (9,9), 0)
     # hsv_img = cv2.GaussianBlur(hsv_img, (9,9), 0)
 
     # Convert the image to grayscale for processing
