@@ -7,19 +7,22 @@ def main():
     img_original = cv2.imread('./images/' + sys.argv[1])
     
     hsv_img = cv2.cvtColor(img_original, cv2.COLOR_BGR2HSV)
-    gray = cv2.cvtColor(img_original, cv2.COLOR_BGR2GRAY)
-    gray_hsv = cv2.cvtColor(hsv_img, cv2.COLOR_BGR2GRAY)
-    thresh = binarize_image(img_original, gray, gray_hsv, hsv_img)
-    
-    hist = cv2.calcHist( [gray_hsv], [0], None, [256], [0, 256] )
 
-    remove_circle_markers(gray, img_original)
+    blur = cv2.GaussianBlur(img_original, (3,3), 0)
+    gray = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
+    gray_hsv = cv2.cvtColor(hsv_img, cv2.COLOR_BGR2GRAY)
+
+    thresh = binarize_image(img_original, gray, gray_hsv, hsv_img)
+    hist = cv2.calcHist( [gray_hsv], [0], None, [256], [0, 256] )
+    remove_circle_markers(gray, thresh)
+
     label_stains(thresh)
     im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(img_original, contours, -1, (0,0,255), 3)
     analyseContours(contours, img_original)
 
     display_result(img_original)
+    cv2.imwrite(sys.argv[1] + " result.jpg", img_original)
 
 
 def label_stains(thresh):
@@ -46,6 +49,7 @@ def fit_ellipse(cnt, img_original):
 def analyseContours(contours, img_original):
     font = cv2.FONT_HERSHEY_SIMPLEX
     area = 0
+    count = 0
     for cnt in contours:
         area += cv2.contourArea(cnt)
         ellipse = fit_ellipse(cnt, img_original)
@@ -60,7 +64,6 @@ def display_result(img_original) :
         # plt.xlim([0, 360]
         # plt.show()
         small = cv2.resize(img_original, (0,0), fx=0.25, fy=0.25)
-        # cv2.imwrite("exp 1 hsv.jpg", hsv_img)
         cv2.imshow('Blood Spatter', small)
         
         if cv2.waitKey(100) & 0xFF == ord('q'):
@@ -70,16 +73,16 @@ def display_result(img_original) :
 
 def remove_circle_markers(gray, img):
     circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 20, param1=100,
-                        param2=58, minRadius=24, maxRadius=82)
-
+                                param2=58, minRadius=24, maxRadius=82)
+    
     if circles is not None:
         circles = np.uint16(np.around(circles))
-
         for i in circles[0,:]:
             # Draw the outer circle
-            cv2.circle(img, (i[0],i[1]),i[2] + 10, (0,255,0), -2)
+            cv2.circle(img, (i[0],i[1]),i[2] + 10, (0,0,0), -2)
             # Draw the center of the circle
             #  cv2.circle(img,(i[0],i[1]),2,(0,0,255),3)
+
 
 
 def binarize_image(img_original, gray, gray_hsv, hsv_img) :
