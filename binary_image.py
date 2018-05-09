@@ -28,7 +28,7 @@ def main():
     print("time in ms", t1-t0)
     display_result(img_original)
 
-    # cv2.imwrite(sys.argv[1] + " result.jpg", img_original)
+    cv2.imwrite(sys.argv[1] + " binary.jpg", thresh)
 
 
 def label_stains(thresh):
@@ -54,16 +54,22 @@ def fit_ellipse(cnt, img_original):
 
 def analyseContours(contours, img_original):
     font = cv2.FONT_HERSHEY_SIMPLEX
-    area = 0
+    area = float('inf')
     count = 0
     for cnt in contours:
-        area += cv2.contourArea(cnt)
         ellipse = fit_ellipse(cnt, img_original)
-        angle = ellipse[2] if ellipse else -1
-        count += 1 if ellipse else 0
-        #  print("gamma ", angle)
-        # cv2.putText(img_original, str(angle), (int(x), int(y)), font, 1, (0,0,0), 2, cv2.LINE_AA)
-    # print("mean area:", area / len(contours))
+        x,y,w,h = cv2.boundingRect(cnt)
+        cv2.putText(img_original, str(w* h) + " width: " + str(w) + "height: " + str(h), (int(x + 10), int(y + 30)), font, 1, (0,255,255), 2, cv2.LINE_AA)
+        area = min(w * h, area) 
+        if (ellipse):
+            
+            angle = ellipse[2]
+            count += 1 
+            #  print("gamma ", angle)
+            # cv2.putText(img_original, str(cv2.contourArea(cnt)), (int(ellipse[0][0]), int(ellipse[0][1])), font, 1, (0,255,255), 2, cv2.LINE_AA)
+        
+
+    print("min area:", area)
     print("ellispe count: ", count)
 
 def display_result(img_original) :
@@ -91,8 +97,6 @@ def remove_circle_markers(gray, img):
             # Draw the center of the circle
             #  cv2.circle(img,(i[0],i[1]),2,(0,0,255),3)
 
-
-
 def binarize_image(img_original, gray, gray_hsv, hsv_img) :
     # lower_hue = 0.0 / 360
     # upper_hue = 360.0 / 360
@@ -112,10 +116,10 @@ def binarize_image(img_original, gray, gray_hsv, hsv_img) :
     ret, thresh = cv2.threshold(gray_hsv, 0, 255, cv2.THRESH_OTSU)
 
     kernel = np.ones((3,3),np.uint8)
-    erosion = cv2.erode(thresh, kernel, iterations = 2)
-    dilation = cv2.dilate(thresh, kernel, iterations = 2)
+   # erosion = cv2.erode(thresh, kernel, iterations = 2)
+   # dilation = cv2.dilate(thresh, kernel, iterations = 2)
 
-    return dilation
+    return thresh
 
 
 if __name__ == '__main__':
