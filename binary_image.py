@@ -116,10 +116,10 @@ def binarize_image(img_original, gray, gray_hsv, hsv_img) :
     ret, thresh = cv2.threshold(gray_hsv, 0, 255, cv2.THRESH_OTSU)
 
     kernel = np.ones((3,3),np.uint8)
-   # erosion = cv2.erode(thresh, kernel, iterations = 2)
-   # dilation = cv2.dilate(thresh, kernel, iterations = 2)
+    erosion = cv2.erode(thresh, kernel, iterations = 2)
+    dilation = cv2.dilate(thresh, kernel, iterations = 2)
 
-    return thresh
+    return dilation
 
 
 if __name__ == '__main__':
