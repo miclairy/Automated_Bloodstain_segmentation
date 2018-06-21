@@ -32,8 +32,8 @@ def main():
 
     display_result(img_original)
 
-   # cv2.imwrite(sys.argv[1] + " binary.jpg", thresh)
-    cv2.imwrite(sys.argv[1] + ".mask", thresh)
+  #  cv2.imwrite(sys.argv[1] + ".mask", thresh)
+    cv2.imwrite(sys.argv[1] + "_annotation.jpg", img_original)
 
 
 def label_stains(thresh):
@@ -56,7 +56,7 @@ def analyseContours(contours, img_original):
     for cnt in contours:
         stain = bloodstain.Stain(cnt)
         stain.draw_ellipse(img_original)
-       
+        stain.annotate(img_original)
         if stain.ellipse:
           #  angle = stain.ellipse[2]
             count += 1 
@@ -86,26 +86,10 @@ def remove_circle_markers(gray, img):
     if circles is not None:
         circles = np.uint16(np.around(circles))
         for i in circles[0,:]:
-            # Draw the outer circle
             cv2.circle(img, (i[0],i[1]),i[2] + 10, (0,0,0), -2)
-            # Draw the center of the circle
-            #  cv2.circle(img,(i[0],i[1]),2,(0,0,255),3)
+
 
 def binarize_image(img_original, gray, gray_hsv, hsv_img) :
-    # lower_hue = 0.0 / 360
-    # upper_hue = 360.0 / 360
-    # saturation = 0.2
-    # value = 0.1
-
-    # lower_threshold = np.array([lower_hue * 179, saturation * 255, value * 255])
-    # upper_threshold = np.array([upper_hue * 179, 255, 255])
-
-    # col_thresh = cv2.inRange(hsv_img, lower_threshold, upper_threshold)
-
-    # blur = cv2.GaussianBlur(img_original, (9,9), 0)
-    # hsv_img = cv2.GaussianBlur(hsv_img, (9,9), 0)
-
-    # Convert the image to grayscale for processing
 
     ret, thresh = cv2.threshold(gray_hsv, 0, 255, cv2.THRESH_OTSU)
 
