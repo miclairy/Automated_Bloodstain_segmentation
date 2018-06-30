@@ -8,6 +8,7 @@ import bloodstain
 def main():
     t0 = time.time()
     img_original = cv2.imread('./images/' + sys.argv[1])
+    scale = float(sys.argv[2]) if len(sys.argv) >= 2 else 1
     
     hsv_img = cv2.cvtColor(img_original, cv2.COLOR_BGR2HSV)
     # plt.hist(hsv_img.ravel(), 256, [0, 255])
@@ -24,7 +25,7 @@ def main():
     label_stains(thresh)
     im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(img_original, contours, -1, (0,0,255), 3)
-    analyseContours(contours, img_original)
+    analyseContours(contours, img_original, scale)
 
     t1 = time.time()
     labels = label_stains(thresh)
@@ -50,11 +51,11 @@ def label_stains(thresh):
     return labels
 
 
-def analyseContours(contours, img_original):
+def analyseContours(contours, img_original, scale):
    # area = float('inf')
     count = 0
     for cnt in contours:
-        stain = bloodstain.Stain(cnt)
+        stain = bloodstain.Stain(cnt, scale)
         stain.draw_ellipse(img_original)
         stain.annotate(img_original)
         if stain.ellipse:
