@@ -4,6 +4,9 @@ import sys
 import time
 from matplotlib import pyplot as plt
 import bloodstain
+import json
+
+stains = []
 
 def main():
     t0 = time.time()
@@ -22,13 +25,12 @@ def main():
     hist = cv2.calcHist( [gray_hsv], [0], None, [256], [0, 256] )
     remove_circle_markers(gray, thresh)
 
-    label_stains(thresh)
     im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(img_original, contours, -1, (0,0,255), 3)
     analyseContours(contours, img_original, scale)
-
+    label_stains()
     t1 = time.time()
-    labels = label_stains(thresh)
+    # labels = label_stains(thresh)
     
 
     display_result(img_original)
@@ -37,18 +39,26 @@ def main():
     cv2.imwrite(sys.argv[1] + "_annotation.jpg", img_original)
 
 
-def label_stains(thresh):
-    ret, labels = cv2.connectedComponents(thresh)
+def label_stains():
+    # ret, labels = cv2.connectedComponents(thresh)
 
-    label_hue = np.uint8(179 * labels / np.max(labels))
-    blank_ch = 255 * np.ones_like(label_hue)
-    labeled_img = cv2.merge([label_hue, blank_ch, blank_ch])
+    # label_hue = np.uint8(179 * labels / np.max(labels))
+    # blank_ch = 255 * np.ones_like(label_hue)
+    # labeled_img = cv2.merge([label_hue, blank_ch, blank_ch])
 
-    labeled_img = cv2.cvtColor(labeled_img, cv2.COLOR_HSV2BGR)
+    # labeled_img = cv2.cvtColor(labeled_img, cv2.COLOR_HSV2BGR)
 
-    labeled_img[label_hue==0] = 0
+    # labeled_img[label_hue==0] = 0
+    labels = {"shapes" : [], "lineColor": [0, 255, 0, 128],
+    "imagePath": sys.argv[1],
+    "flags": {},
+    "imageData" : None,
+    "fillColor": [255, 0, 0,128]}
+    for stain in stains:
+        labels["shapes"].append(stain.label())
 
-    return labels
+    with open(sys.argv[1] +'.json', 'w') as outfile:
+        json.dump(labels, outfile)
 
 
 def analyseContours(contours, img_original, scale):
@@ -56,6 +66,7 @@ def analyseContours(contours, img_original, scale):
     count = 0
     for cnt in contours:
         stain = bloodstain.Stain(cnt, scale)
+        stains.append(stain)
         stain.draw_ellipse(img_original)
         stain.annotate(img_original)
         if stain.ellipse:
