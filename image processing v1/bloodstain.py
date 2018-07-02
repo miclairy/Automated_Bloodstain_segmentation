@@ -1,21 +1,21 @@
 import cv2
 import json
+import numpy as np
 
 class Stain:
 
-    def __init__(self, contour, scale):
+    def __init__(self, contour, scale, original):
         self.contour = contour
         # print(contour)
         moment = cv2.moments(contour)
+        self.original = original
         self.position = (int(moment['m10'] / moment['m00']), int(moment['m01'] / moment['m00']))
         self.ellipse = cv2.fitEllipse(self.contour) if len(self.contour) >= 5 else None
         self.area = cv2.contourArea(self.contour)
         self.area_mm = self.area * (scale ** 2)
-        self.lightness = -1
-        self.orientaton =  -1
-        self.directionality = -1      
+        self.directionality = float('inf')     
 
-    def draw_ellipse(self, img_original):
+    def draw_ellipse(self, image):
 
         if self.ellipse is not None:
             cv2.ellipse(img_original, self.ellipse, (0,255,0), 2)
@@ -25,22 +25,38 @@ class Stain:
             (x, y), (width, height), angle = self.ellipse
             return width / height
         else:
-            return None
+            return float('inf')
 
-    def regularity(self):
+    def orientaton(self):
+        if self.ellipse:
+            (x, y), (width, height), angle = self.ellipse
+            minor = width / 2
+            major = height / 2
+            alpha = np.rad2deg(np.arcsin(minor / major))
+            return [alpha, angle]
+        return [float('inf'), float('inf')]
+
+    def intensity(self, image):
+        grey = cv2.cvtColor(self.original, cv2.COLOR_BGR2GRAY)
+        mask = np.zeros(grey.shape, np.uint8)
+        cv2.drawContours(mask, [self.contour], 0, 255, -1)
+        intensity = cv2.mean(self.original, mask=mask)
+        return intensity
+
+    def solidity(self):
+        '''regularity of element margin'''
         hull = cv2.convexHull(self.contour)
         hull_area = cv2.contourArea(hull)
         return self.area / hull_area
     
     def annotate(self, image):
-
         font = cv2.FONT_HERSHEY_SIMPLEX
-        anotation = str(self.regularity()) + str(cv2.isContourConvex(self.contour))#+ " width: " + str(w) + "height: " + str(h)
+        anotation = "(aplha:{:.2f}, angle:{:.2f})".format(self.orientaton()[0], self.orientaton()[1])
         cv2.putText(image, anotation, (int(self.position[0] + 10), int(self.position[1] + 30)), font, 1, (0,255,255), 2, cv2.LINE_AA)
 
-    def label(self):
+    def label(self, id):
         points = [x[0] for x in self.contour.tolist() ]
-        label = {"points": points, "fill_color": None, "line_color": None, "label": "bloodstain"}
+        label = {"points": points, "fill_color": None, "line_color": None, "label": "bloodstain" + id}
         # print(json.dumps(label, indent=4))
         return label
     

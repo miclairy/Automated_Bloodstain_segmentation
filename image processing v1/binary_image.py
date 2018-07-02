@@ -1,74 +1,72 @@
 import cv2
 import numpy as np
 import sys
+import os
 import time
 from matplotlib import pyplot as plt
 import bloodstain
 import json
 
 stains = []
+#path = '/home/cosc/student/cba62/blood-spatter-analysis/Neural Net/bloodstains/Maykee Expirated/' 
+path = "./images/"
 
 def main():
     t0 = time.time()
-    img_original = cv2.imread('./images/' + sys.argv[1])
+    filename = path + sys.argv[1]
+    print(filename)
+    image = cv2.imread(filename)
+    orginal = cv2.imread(filename)
+
     scale = float(sys.argv[2]) if len(sys.argv) >= 2 else 1
     
-    hsv_img = cv2.cvtColor(img_original, cv2.COLOR_BGR2HSV)
+    hsv_img = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     # plt.hist(hsv_img.ravel(), 256, [0, 255])
     # plt.xlim([0, 360])
     # plt.show()
-    blur = cv2.GaussianBlur(img_original, (3,3), 0)
+    blur = cv2.GaussianBlur(image, (3,3), 0)
     gray = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
     gray_hsv = cv2.cvtColor(hsv_img, cv2.COLOR_BGR2GRAY)
 
-    thresh = binarize_image(img_original, gray, gray_hsv, hsv_img)
+    thresh = binarize_image(image, gray, gray_hsv, hsv_img)
     hist = cv2.calcHist( [gray_hsv], [0], None, [256], [0, 256] )
     remove_circle_markers(gray, thresh)
 
-    im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    cv2.drawContours(img_original, contours, -1, (0,0,255), 3)
-    analyseContours(contours, img_original, scale)
+    im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)    
+    analyseContours(contours, orginal, image, scale)
+   # cv2.drawContours(image, contours, -1, (0,0,255), 3)
     label_stains()
     t1 = time.time()
-    # labels = label_stains(thresh)
-    
+    display_result(image)
 
-    display_result(img_original)
-
-  #  cv2.imwrite(sys.argv[1] + ".mask", thresh)
-    cv2.imwrite(sys.argv[1] + "_annotation.jpg", img_original)
-
+    cv2.imwrite(sys.argv[1] + "_annotation.jpg", image)
 
 def label_stains():
-    # ret, labels = cv2.connectedComponents(thresh)
 
-    # label_hue = np.uint8(179 * labels / np.max(labels))
-    # blank_ch = 255 * np.ones_like(label_hue)
-    # labeled_img = cv2.merge([label_hue, blank_ch, blank_ch])
-
-    # labeled_img = cv2.cvtColor(labeled_img, cv2.COLOR_HSV2BGR)
-
-    # labeled_img[label_hue==0] = 0
     labels = {"shapes" : [], "lineColor": [0, 255, 0, 128],
     "imagePath": sys.argv[1],
     "flags": {},
     "imageData" : None,
     "fillColor": [255, 0, 0,128]}
+    i = 0
     for stain in stains:
-        labels["shapes"].append(stain.label())
+        labels["shapes"].append(stain.label(" " + str(i)))
+        i = i + 1
 
-    with open(sys.argv[1] +'.json', 'w') as outfile:
+    mask_filename = path + os.path.splitext(sys.argv[1])[0] + '.json'
+    with open(mask_filename, 'w') as outfile:
         json.dump(labels, outfile)
 
 
-def analyseContours(contours, img_original, scale):
+def analyseContours(contours, orginal, image, scale):
    # area = float('inf')
     count = 0
     for cnt in contours:
-        stain = bloodstain.Stain(cnt, scale)
+        
+        stain = bloodstain.Stain(cnt, scale, orginal)
         stains.append(stain)
-        stain.draw_ellipse(img_original)
-        stain.annotate(img_original)
+        stain.draw_ellipse(image)
+        stain.annotate(image)
         if stain.ellipse:
           #  angle = stain.ellipse[2]
             count += 1 
