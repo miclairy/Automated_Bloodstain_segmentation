@@ -9,7 +9,7 @@ class Stain:
         # print(contour)
         moment = cv2.moments(contour)
         self.original = original
-        self.position = (int(moment['m10'] / moment['m00']), int(moment['m01'] / moment['m00']))
+        self.position = (1,1) #(int(moment['m10'] / moment['m00']), int(moment['m01'] / moment['m00']))
         self.ellipse = cv2.fitEllipse(self.contour) if len(self.contour) >= 5 else None
         self.area = cv2.contourArea(self.contour)
         self.area_mm = self.area * (scale ** 2)
@@ -18,7 +18,7 @@ class Stain:
     def draw_ellipse(self, image):
 
         if self.ellipse is not None:
-            cv2.ellipse(img_original, self.ellipse, (0,255,0), 2)
+            cv2.ellipse(image, self.ellipse, (0,255,0), 2)
 
     def circularity(self):
         if self.ellipse:
@@ -32,8 +32,11 @@ class Stain:
             (x, y), (width, height), angle = self.ellipse
             minor = width / 2
             major = height / 2
-            alpha = np.rad2deg(np.arcsin(minor / major))
-            return [alpha, angle]
+            if angle <= 180:
+                gamma = angle
+            else:
+                gamma = (angle + 180) % 360
+            return [angle, gamma]
         return [float('inf'), float('inf')]
 
     def intensity(self, image):
@@ -51,7 +54,8 @@ class Stain:
     
     def annotate(self, image):
         font = cv2.FONT_HERSHEY_SIMPLEX
-        anotation = "(aplha:{:.2f}, angle:{:.2f})".format(self.orientaton()[0], self.orientaton()[1])
+        anotation = "(angle:{:.2f}, gamma:{:.2f})".format(self.orientaton()[0], self.orientaton()[1])
+        cv2.circle(image, (self.position[0], self.position[1]), 2, (255, 255, 255), -1)
         cv2.putText(image, anotation, (int(self.position[0] + 10), int(self.position[1] + 30)), font, 1, (0,255,255), 2, cv2.LINE_AA)
 
     def label(self, id):
