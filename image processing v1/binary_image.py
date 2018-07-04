@@ -8,7 +8,7 @@ import bloodstain
 import json
 
 stains = []
-#path = '/home/cosc/student/cba62/blood-spatter-analysis/Neural Net/bloodstains/Maykee Expirated/' 
+#path = '/home/cosc/student/cba62/blood-spatter-analysis/Neural Net/bloodstains/Gwenda Cast Off/' 
 path = "./images/"
 
 def main():
@@ -33,9 +33,9 @@ def main():
     remove_circle_markers(gray, thresh)
 
     im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)    
+    cv2.drawContours(image, contours, -1, (0,0,255), 3)
     analyseContours(contours, orginal, image, scale)
-   # cv2.drawContours(image, contours, -1, (0,0,255), 3)
-    label_stains()
+   # label_stains()
     t1 = time.time()
     display_result(image)
 
@@ -107,7 +107,7 @@ def binarize_image(img_original, gray, gray_hsv, hsv_img) :
     erosion = cv2.erode(thresh, kernel, iterations = 2)
     dilation = cv2.dilate(thresh, kernel, iterations = 2)
 
-    return dilation
+    return thresh
 
 
 if __name__ == '__main__':
