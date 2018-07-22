@@ -30,17 +30,24 @@ def main():
     gray = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
     gray_hsv = cv2.cvtColor(hsv_img, cv2.COLOR_BGR2GRAY)
 
-    thresh = binarize_image(image, gray, gray_hsv, hsv_img)
+    thresh = binarize_image(image, gray_hsv)
+    thresh2 = binarize_image(image, gray)
+    thresh2 = cv2.bitwise_not(thresh2)
     hist = cv2.calcHist( [gray_hsv], [0], None, [256], [0, 256] )
     remove_circle_markers(gray, thresh)
+    remove_circle_markers(gray, thresh2)
+    thresh = cv2.bitwise_and(thresh, thresh2)
+    kernel = np.ones((3,3),np.uint8)
+
+    erosion = cv2.erode(thresh, kernel, iterations = 2)
+    thresh = cv2.dilate(erosion, kernel, iterations = 2)
 
     im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)    
     cv2.drawContours(image, contours, -1, (255,0,255), 3)
     analyseContours(contours, orginal, image, scale)
-   # export_data()
+    export_data()
     # label_stains()
     # t1 = time.time()
-    display_result(thresh)
 
     cv2.imwrite(save_path + sys.argv[1], image)
 
@@ -62,8 +69,7 @@ def label_stains():
 
     mask_filename = path + os.path.splitext(sys.argv[1])[0] + '.json'
     with open(mask_filename, 'w') as outfile:
-        json.dump(labels, outfile)
-
+        json.dump(stain.label())
 
 def analyseContours(contours, orginal, image, scale):
    # area = float('inf')
@@ -85,10 +91,12 @@ def export_data():
                                 quotechar='"', quoting=csv.QUOTE_MINIMAL)
         data_writer.writerow(["id", "position x", "position y", "area px", "area_mm", "width ellipse", "height ellipse", \
                         "angle", "gamma", "direction", "solidity", "circularity", "intensity"])
-        for stain in stains:
-            stain.write_data(data_writer)
-        
-
+        with open(file_name + "_stains.csv", 'w') as point_file:
+            points_writer = csv.writer(point_file, delimiter=',',
+                                quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            for stain in stains:
+                stain.write_data(data_writer)
+                points_writer.writerow(stain.label())      
 
 def display_result(img_original) :
     while True:
@@ -101,7 +109,6 @@ def display_result(img_original) :
         if cv2.waitKey(100) & 0xFF == ord('q'):
             cv2.destroyAllWindows()
             break
-
 
 def remove_circle_markers(gray, img):
     circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 20, param1=100,
@@ -171,6 +178,7 @@ def remove_bottom(no_ruler_crop, y):
         max_x_len = (line, max(max_x_len[1], abs(x1 - x2))) if abs(x1 - x2) > max_x_len[1] else max_x_len
     x1,y1,x2,y2 = max_x_len[0][0]
     return max(y1, y2) - y
+    kernel = np.ones((3,3),np.uint8)
 
 def line_count(x1, x_count):
     if x1 in x_count:
@@ -181,9 +189,9 @@ def line_count(x1, x_count):
 
 
 
-def binarize_image(img_original, gray, gray_hsv, hsv_img) :
+def binarize_image(img_original, gray) :
 
-    ret, thresh = cv2.threshold(gray_hsv, 0, 255, cv2.THRESH_TRIANGLE)
+    ret, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_TRIANGLE)
     # thresh = cv2.bitwise_not(thresh)
 
     kernel = np.ones((3,3),np.uint8)

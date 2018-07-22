@@ -121,11 +121,11 @@ class Stain:
         #    cv2.drawContours(image, [self.left_half], 0, (255,255,0), 3)
         cv2.putText(image, anotation, (int(self.position[0] + 10), int(self.position[1] + 30)), font, 1, (0,255,255), 2, cv2.LINE_AA)
 
-    def label(self, id):
+    def label(self):
         points = [x[0] for x in self.contour.tolist() ]
-        label = {"points": points, "fill_color": None, "line_color": None, "label": "bloodstain" + id}
+        # label = {"points": points, "fill_color": None, "line_color": None, "label": "bloodstain" + id}
         # print(json.dumps(label, indent=4))
-        return label
+        return [self.id] + points
     
     def write_data(self, writer):
         writer.writerow([self.id, self.position[0], self.position[1], self.area, self.area_mm, self.width, self.height, \

@@ -1,4 +1,4 @@
-import binary_image
+import stain_segmentation
 import sys
 import os
 from subprocess import call
@@ -11,7 +11,7 @@ def label_images():
 
     for filename in os.listdir(path):
         if "jpg" in filename.lower() or "tif" in filename:
-            call(["python3", "binary_image.py", sys.argv[1] + filename, str(7)])
+            call(["python3", "stain_segmentation.py", sys.argv[1] + filename, str(7)])
             # downsample(path, filename)
             
 def downsample(path, filename):
