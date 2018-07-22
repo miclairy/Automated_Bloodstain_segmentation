@@ -7,6 +7,7 @@ from matplotlib import pyplot as plt
 import bloodstain
 import json
 import csv
+from parse_arguements import parse_args
 
 stains = []
 # path = '/home/cosc/student/cba62/blood-spatter-analysis/Neural Net/bloodstains/cast-off/' 
@@ -16,16 +17,27 @@ save_path = '/media/cba62/Elements/Result_data/'
 
 def main():
    # t0 = time.time()
-    filename = path + sys.argv[1]
+    filename = None if not parse_args()['filename'] else path + parse_args()['filename']
+    full_path = parse_args()['full_path']
+    if full_path:
+        filename = full_path
+    if not filename:
+        print("No file selected")
+        return 
     print(filename)
+
     image = cv2.imread(filename)
     orginal = cv2.imread(filename)
-    scale = 7 if len(sys.argv) <= 2 else float(sys.argv[2])
-    
-    hsv_img = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+    if not image:
+        print("No image file found")
+        return
     # plt.hist(hsv_img.ravel(), 256, [0, 255])
     # plt.xlim([0, 360])
-    # plt.show()
+    # plt.show()]
+    
+    hsv_img = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    scale = parse_args()['scale']
     blur = cv2.GaussianBlur(image, (3,3), 0)
     gray = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
     gray_hsv = cv2.cvtColor(hsv_img, cv2.COLOR_BGR2GRAY)
