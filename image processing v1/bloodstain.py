@@ -126,9 +126,12 @@ class Stain:
         label = {"points": points, "fill_color": None, "line_color": None, "label": "bloodstain" + id}
         # print(json.dumps(label, indent=4))
         return label
+
+    def get_summary_data(self):
+        return [self.id, self.position[0], self.position[1], self.area, self.area_mm, self.width, self.height, \
+                self.orientaton()[0], self.orientaton()[1], self.direction(), self.solidity(), self.circularity(), self.intensity(self.original)]
     
     def write_data(self, writer):
-        writer.writerow([self.id, self.position[0], self.position[1], self.area, self.area_mm, self.width, self.height, \
-                        self.orientaton()[0], self.orientaton()[1], self.direction(), self.solidity(), self.circularity(), self.intensity(self.original)])
+        writer.writerow(self.get_summary_data())
 
     

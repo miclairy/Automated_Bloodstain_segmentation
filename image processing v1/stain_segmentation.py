@@ -15,8 +15,7 @@ stains = []
 path = '/media/cba62/Elements/Cropped Data/'
 save_path = '/media/cba62/Elements/Result_data/'
 
-def main():
-   # t0 = time.time()
+def CLI():
     filename = None if not parse_args()['filename'] else path + parse_args()['filename']
     full_path = parse_args()['full_path']
     if full_path:
@@ -29,9 +28,18 @@ def main():
     image = cv2.imread(filename)
     orginal = cv2.imread(filename)
 
-    if not image:
+    if image is None:
         print("No image file found")
         return
+
+    result = stain_segmentation(image, orginal)
+    display_result(result)
+    cv2.imwrite(save_path + sys.argv[1], result)
+
+
+def stain_segmentation(image, orginal):
+   # t0 = time.time()
+    
     # plt.hist(hsv_img.ravel(), 256, [0, 255])
     # plt.xlim([0, 360])
     # plt.show()]
@@ -52,9 +60,7 @@ def main():
    # export_data()
     # label_stains()
     # t1 = time.time()
-    display_result(thresh)
-
-    cv2.imwrite(save_path + sys.argv[1], image)
+    return image
 
 def crop_image(image):
     x, y, w, h = remove_rulers(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
@@ -206,4 +212,4 @@ def binarize_image(img_original, gray, gray_hsv, hsv_img) :
 
 
 if __name__ == '__main__':
-    main()
+    CLI()
