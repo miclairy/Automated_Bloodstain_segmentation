@@ -7,7 +7,6 @@ class Stain:
 
     def __init__(self, id, contour, scale, original): # scale in px per mm
         self.contour = contour
-        # print(contour)
         self.id = id
         moment = cv2.moments(contour)
         self.original = original
@@ -15,8 +14,10 @@ class Stain:
         self.ellipse = cv2.fitEllipse(self.contour) if len(self.contour) >= 5 else None
         self.area = cv2.contourArea(self.contour)
         self.area_mm = self.area * (1 / scale ** 2)
+        self.major_axis = None
         if self.ellipse is not None:
             (self.x_ellipse, self.y_ellipse), (self.width, self.height), self.angle = self.ellipse
+            self.major_axis = self.calculate_major_axis()
         else:
             self.x_ellipse, self.y_ellipse, self.width, self.height, self.angle = [None] * 5
         
@@ -33,10 +34,7 @@ class Stain:
 
     def orientaton(self):
         if self.ellipse:
-            
-            minor = self.width / 2
-            major = self.height / 2
-            if self.direction() == "left":
+            if self.direction()[0] == "left":
                 gamma = (self.angle + 180) % 360
             else:
                 gamma = self.angle
@@ -47,24 +45,17 @@ class Stain:
     def direction(self):
         if self.ellipse:
             x = self.x_ellipse
-            y = self.y_ellipse
             angle = self.angle
-            ptx = np.cos(np.deg2rad(angle)) * self.width / 2
-            pty = np.sin(np.deg2rad(angle)) * self.width / 2
-            x0 = int(x + ptx)
-            x1 = int(x - ptx)
-            y0 = int(y - pty)
-            y1 = int(y + pty)
             left_half = []
             right_half = []
             
             for pt in self.contour:
                 pt = pt[0]
-                side = (x1 - x0) * (pt[1] - y0) - (pt[0] - x0) * (y1 - y0)
+                side = (pt[0] - x)
                 if side > 1:
-                    left_half.append(pt)
-                else:
                     right_half.append(pt)
+                else:
+                    left_half.append(pt)
             left_half = np.array(left_half)
             
             right_half = np.array(right_half)
@@ -73,20 +64,33 @@ class Stain:
             left_half = self.contour[ : len(self.contour) // 2]
             right_half = self.contour[len(self.contour) // 2 : ]
             angle = float('inf')
-
-        if angle < 90:
-            direction = "up "
-        else:
-            direction = "down "
         
         if np.abs(self.area_half(left_half) - self.area_half(right_half)) <= 0.005:  
-            direction += "?"
+            direction = "?"
         elif self.area_half(left_half) < self.area_half(right_half):
-            direction += "left"
+            if angle < 90:
+                direction = ("left", "down")
+            else:
+                direction = ("left", "up")
         else:
-            direction += "right"
-        # print(self.area_half(left_half), self.area_half(right_half), direction)
+            if angle < 90:
+                direction = ("right", "up")
+            else:
+                direction = ("right", "down")
+
         return direction
+
+    def calculate_major_axis(self):
+        x = self.x_ellipse 
+        y = self.y_ellipse
+        if self.angle:
+            pty = np.cos(np.deg2rad(self.angle)) * 10000000
+            ptx = np.sin(np.deg2rad(self.angle)) * 10000000
+            x0 = int(x + ptx)
+            x1 = int(x - ptx)
+            y0 = int(y - pty)
+            y1 = int(y + pty)
+            return sorted([(int(x1), int(y1)), (int(x0), int(y0))], key=lambda x : x[0]) 
 
     def area_half(self, half_contour):
         if len(half_contour) > 0:
@@ -114,22 +118,24 @@ class Stain:
     
     def annotate(self, image):
         font = cv2.FONT_HERSHEY_SIMPLEX
-        anotation = str(self.id) #"({} {:.2f})".format(self.direction(), self.orientaton()[0])
+        anotation = str(self.id) + " " + str(self.direction())
         cv2.circle(image, (self.position[0], self.position[1]), 2, (255, 255, 255), -1)     
-        #
-        #if len(self.left_half) > 0:
+        
+        # if len(self.left_half) > 0:
         #    cv2.drawContours(image, [self.left_half], 0, (255,255,0), 3)
-        cv2.putText(image, anotation, (int(self.position[0] + 10), int(self.position[1] + 30)), font, 1, (0,255,255), 2, cv2.LINE_AA)
+        #    cv2.drawContours(image, [self.right_half], 0, (255,255,0), 3)
+        if self.angle:
+            cv2.line(image , self.major_axis[0], self.major_axis[1], (255,0,0))
+        # cv2.putText(image, anotation, (int(self.position[0] + 10), int(self.position[1] + 30)), font, 1, (0,255,255), 2, cv2.LINE_AA)
 
     def label(self):
         points = [x[0] for x in self.contour.tolist() ]
-        # label = {"points": points, "fill_color": None, "line_color": None, "label": "bloodstain" + id}
-        # print(json.dumps(label, indent=4))
+
         return [self.id] + points
 
     def get_summary_data(self):
         return [self.id, self.position[0], self.position[1], self.area, self.area_mm, self.width, self.height, \
-                self.orientaton()[0], self.orientaton()[1], self.direction(), self.solidity(), self.circularity(), self.intensity(self.original)]
+                self.orientaton()[0], self.orientaton()[1], str(self.direction()), self.solidity(), self.circularity(), self.intensity(self.original)]
     
     def write_data(self, writer):
         writer.writerow(self.get_summary_data())

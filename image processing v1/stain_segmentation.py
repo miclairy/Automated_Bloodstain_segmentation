@@ -8,12 +8,13 @@ import bloodstain
 import json
 import csv
 from parse_arguements import parse_args
+from pattern import Pattern
 
-stains = []
 # path = '/home/cosc/student/cba62/blood-spatter-analysis/Neural Net/bloodstains/cast-off/' 
 #path = "./images/"
 path = '/media/cba62/Elements/Cropped Data/'
 save_path = '/media/cba62/Elements/Result_data/'
+pattern = Pattern()
 
 def CLI():
     filename = None if not parse_args()['filename'] else path + parse_args()['filename']
@@ -34,7 +35,8 @@ def CLI():
 
     result = stain_segmentation(image, orginal)
     display_result(result)
-    cv2.imwrite(save_path + sys.argv[1], result)
+    # export_data(filename)
+    cv2.imwrite(save_path + parse_args()['filename'], result)
 
 
 def stain_segmentation(image, orginal):
@@ -64,16 +66,12 @@ def stain_segmentation(image, orginal):
 
     im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)    
     cv2.drawContours(image, contours, -1, (255,0,255), 3)
+    
     analyseContours(contours, orginal, image, scale)
-    export_data()
+    pattern.convergence()
     # label_stains()
     # t1 = time.time()
-<<<<<<< HEAD
-
-    cv2.imwrite(save_path + sys.argv[1], image)
-=======
     return image
->>>>>>> 9df16cc85858a3444aa6a559d79534da7d01c688
 
 def crop_image(image):
     x, y, w, h = remove_rulers(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
@@ -87,7 +85,7 @@ def label_stains():
     "imageData" : None,
     "fillColor": [255, 0, 0,128]}
     i = 0
-    for stain in stains:
+    for stain in pattern.stains:
         labels["shapes"].append(stain.label(" " + str(i)))
         i = i + 1
 
@@ -99,17 +97,17 @@ def analyseContours(contours, orginal, image, scale):
    # area = float('inf')
     count = 0
     for contour in contours:
-        
-        stain = bloodstain.Stain(count, contour, scale, orginal)
-        stains.append(stain)
-        stain.draw_ellipse(image)
-        stain.annotate(image)
-        count += 1 
-
+        if cv2.contourArea(contour) > 0:
+            stain = bloodstain.Stain(count, contour, scale, orginal)
+            pattern.stains.append(stain)
+            stain.draw_ellipse(image)
+            stain.annotate(image)
+            count += 1
+    
     print("Count: ", count)
 
-def export_data():
-    file_name = os.path.splitext(path + sys.argv[1])[0]
+def export_data(save_path):
+    file_name = os.path.splitext(save_path)[0]
     with open(file_name + '_data.csv', 'w', newline='') as csvfile:
         data_writer = csv.writer(csvfile, delimiter=',',
                                 quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -118,7 +116,7 @@ def export_data():
         with open(file_name + "_stains.csv", 'w') as point_file:
             points_writer = csv.writer(point_file, delimiter=',',
                                 quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            for stain in stains:
+            for stain in pattern.stains:
                 stain.write_data(data_writer)
                 points_writer.writerow(stain.label())      
 
