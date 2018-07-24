@@ -3,29 +3,36 @@ import numpy as np
 class Pattern:
 
     def __init__(self, stains=[]):
-        self.stains = sorted(stains, key= lambda s: s.major_axis[0])
+        self.stains = stains
+        self.elliptical_stains = []
+        for stain in self.stains:
+            if stain.ellipse:
+                self.elliptical_stains.append(stain)
+        print("pancake", self.elliptical_stains)
 
     def convergence(self):
         intersects = []
-        for i in range(len(self.stains) - 1):
-            axis = self.stains[i].major_axis
+
+        stains = sorted(self.elliptical_stains, key= lambda s: s.major_axis[0])
+        for i in range(len(stains) - 1):
+            axis = stains[i].major_axis
             if axis is not None:
-                while i+1 < len(self.stains) and self.stains[i + 1].major_axis == None:
+                while i+1 < len(stains) and stains[i + 1].major_axis == None:
                     i += 1
-                if i+1 >= len(self.stains):
+                if i+1 >= len(stains):
                     break
                 j = i + 1
-                still_left = self.stains[j].major_axis[0][0] < axis[1][0]
-                while  j < len(self.stains) and still_left:
-                    intersect = self.line_intersection(axis, self.stains[j].major_axis)
+                still_left = stains[j].major_axis[0][0] < axis[1][0]
+                while  j < len(stains) and still_left:
+                    intersect = self.line_intersection(axis, stains[j].major_axis)
                     if intersect:
                         intersects.append(intersect)
                     j += 1
-                    while j < len(self.stains) and self.stains[j].major_axis == None :
+                    while j < len(stains) and stains[j].major_axis == None :
                         j += 1
-                    if j >= len(self.stains):
+                    if j >= len(stains):
                         break
-                    still_left = self.stains[j].major_axis[0][0] < axis[1][0] 
+                    still_left = stains[j].major_axis[0][0] < axis[1][0] 
         print(intersects)
         # TODO work out what to do here and clean up the code!
 

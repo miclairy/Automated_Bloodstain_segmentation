@@ -39,16 +39,15 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
     
     def populate_table(self):
         self.tableWidget.setColumnCount(13)
-        self.tableWidget.setRowCount(len(Seg.stains))
+        self.tableWidget.setRowCount(len(Seg.pattern.stains))
         headers = "id;position x;position y;area px;area_mm;width ellipse;height ellipse;angle;gamma;direction;solidity;circularity;intensity"
         self.tableWidget.setHorizontalHeaderLabels(headers.split(";"))
         j = 0
-        for stain in Seg.stains:
-            print("getting summary data for stain", stain.id, stain.id / len(Seg.stains) * 100, "%")
-            stain_data = stain.get_summary_data()
+        for stain in Seg.pattern.stains:
+            print("getting summary data for stain", stain.id, stain.id / len(Seg.pattern.stains) * 100, "%")
+            stain_data = stain.get_summary_data()            
             for i in range(13):
-                print(stain_data[i])
-                self.tableWidget.setItem(i,j, QtGui.QTableWidgetItem(str(stain_data[i])))
+                self.tableWidget.setItem(j,i, QtGui.QTableWidgetItem(str(stain_data[i])))
             j += 1
         self.tableWidget.show()
 
