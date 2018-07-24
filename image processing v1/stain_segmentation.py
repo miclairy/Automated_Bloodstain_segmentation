@@ -19,8 +19,12 @@ pattern = Pattern()
 def CLI():
     filename = None if not parse_args()['filename'] else path + parse_args()['filename']
     full_path = parse_args()['full_path']
+    print(full_path)
     if full_path:
         filename = full_path
+        save_path = os.path.splitext(full_path)[0]  + " result.jpg"
+    else:
+        save_path = save_path + parse_args()['filename']
     if not filename:
         print("No file selected")
         return 
@@ -36,7 +40,7 @@ def CLI():
     result = stain_segmentation(image, orginal)
     display_result(result)
     # export_data(filename)
-    cv2.imwrite(save_path + parse_args()['filename'], result)
+    cv2.imwrite(save_path, result)
 
 
 def stain_segmentation(image, orginal):
@@ -96,14 +100,15 @@ def label_stains():
 def analyseContours(contours, orginal, image, scale):
    # area = float('inf')
     count = 0
+    print(pattern.stains)
     for contour in contours:
         if cv2.contourArea(contour) > 0:
             stain = bloodstain.Stain(count, contour, scale, orginal)
-            pattern.stains.append(stain)
+            pattern.add_stain(stain)
             stain.draw_ellipse(image)
             stain.annotate(image)
             count += 1
-    
+    print(pattern.stains)
     print("Count: ", count)
 
 def export_data(save_path):

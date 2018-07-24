@@ -10,3 +10,13 @@ def parse_args():
 
     args = parser.parse_args()
     return vars(args)
+
+def parse_batch_args():
+    parser = ArgumentParser(description='Batch process segmenting bloodstain spatter patterns')
+    parser.add_argument("-f", "--folder", dest="folder",
+                        help="batch process folder from base path", metavar="FOLDER")
+    parser.add_argument("-F", "--AbsoluteFolder", dest="full_path",
+                        help="batch process abosolute path", metavar="FOLDER")
+
+    args = parser.parse_args()
+    return vars(args)

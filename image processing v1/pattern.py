@@ -8,32 +8,26 @@ class Pattern:
         for stain in self.stains:
             if stain.ellipse:
                 self.elliptical_stains.append(stain)
-        print("pancake", self.elliptical_stains)
+    
+    def add_stain(self, stain):
+        self.stains.append(stain)
+        if stain.major_axis != None:
+            self.elliptical_stains.append(stain)
 
     def convergence(self):
         intersects = []
-
         stains = sorted(self.elliptical_stains, key= lambda s: s.major_axis[0])
         for i in range(len(stains) - 1):
             axis = stains[i].major_axis
-            if axis is not None:
-                while i+1 < len(stains) and stains[i + 1].major_axis == None:
-                    i += 1
-                if i+1 >= len(stains):
-                    break
-                j = i + 1
-                still_left = stains[j].major_axis[0][0] < axis[1][0]
-                while  j < len(stains) and still_left:
-                    intersect = self.line_intersection(axis, stains[j].major_axis)
-                    if intersect:
-                        intersects.append(intersect)
-                    j += 1
-                    while j < len(stains) and stains[j].major_axis == None :
-                        j += 1
-                    if j >= len(stains):
-                        break
-                    still_left = stains[j].major_axis[0][0] < axis[1][0] 
-        print(intersects)
+            j = i + 1
+            still_left = stains[j].major_axis[0][0] < axis[1][0]
+            while  j < len(stains) - 1 and still_left:
+                intersect = self.line_intersection(axis, stains[j].major_axis)
+                if intersect:
+                    intersects.append(intersect)
+                j += 1
+                still_left = stains[j].major_axis[0][0] < axis[1][0] 
+        print("intersects:" ,intersects)
         # TODO work out what to do here and clean up the code!
 
 

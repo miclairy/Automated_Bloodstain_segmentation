@@ -3,15 +3,28 @@ import sys
 import os
 from subprocess import call
 import cv2
+from parse_arguements import parse_batch_args
 
-def label_images():
+def segment_images():
+    
     # path = '/home/cosc/student/cba62/blood-spatter-analysis/Neural Net/test/downsampled/'
     # path = '/home/cosc/student/cba62/blood-spatter-analysis/image processing v1/images/'
-    path = '/media/cba62/Elements/Cropped Data/' + sys.argv[1]
+    path = '/media/cba62/Elements/Cropped Data/'
+    
+    path = None if not parse_batch_args()['folder'] else path + parse_batch_args()['folder']
+    full_path = parse_batch_args()['full_path']
+    if full_path:
+        path = full_path
+    if not path:
+        print("No folder selected")
+        return 
+    print(path)
+    
 
     for filename in os.listdir(path):
         if "jpg" in filename.lower() or "tif" in filename:
-            call(["python3", "stain_segmentation.py", sys.argv[1] + filename, str(7)])
+            print(filename)
+            call(["python3", "stain_segmentation.py", "-F", path.strip() + filename.strip() , "-s " + str(7)])
             # downsample(path, filename)
             
 def downsample(path, filename):
@@ -22,4 +35,5 @@ def downsample(path, filename):
     cv2.imwrite(path + filename, src)
 
 
-label_images()
+if __name__ == '__main__':
+    segment_images()
