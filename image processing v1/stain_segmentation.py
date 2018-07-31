@@ -24,7 +24,7 @@ def CLI():
         filename = full_path
         save_path = os.path.splitext(full_path)[0]  + " result.jpg"
     else:
-        save_path = save_path + parse_args()['filename']
+        save_path =  '/media/cba62/Elements/Result_data/' + parse_args()['filename']
     if not filename:
         print("No file selected")
         return 
@@ -40,7 +40,7 @@ def CLI():
     result = stain_segmentation(image, orginal)
     display_result(result)
     # export_data(filename)
-    cv2.imwrite(save_path, result)
+    # cv2.imwrite(save_path, result)
 
 
 def stain_segmentation(image, orginal):
@@ -72,7 +72,8 @@ def stain_segmentation(image, orginal):
     cv2.drawContours(image, contours, -1, (255,0,255), 3)
     
     analyseContours(contours, orginal, image, scale)
-    pattern.convergence()
+    # pattern.convergence()
+    pattern.linearity()
     # label_stains()
     # t1 = time.time()
     return image

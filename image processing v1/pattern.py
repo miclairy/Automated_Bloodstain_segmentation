@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 class Pattern:
 
@@ -48,7 +49,27 @@ class Pattern:
         return x, y
     
     def linearity(self):
-        pass
+        stain_centers_x = np.array([stain.position[0] for stain in self.stains])
+        stain_centers_y = np.array([stain.position[1] for stain in self.stains])
+        
+        xp = np.linspace(0, max(stain_centers_x))
+        fitted = np.polyfit(stain_centers_x, stain_centers_y, 2)
+        poly = np.poly1d(fitted)
+        _fitted_plot = plt.plot(stain_centers_x, stain_centers_y, '.', xp, poly(xp), '-')
+        plt.ylim(max(stain_centers_y), 0)
+
+        y_fit = poly(stain_centers_x)                         
+        yi = np.sum(stain_centers_y) / len(stain_centers_y)          
+        ssreg = np.sum((y_fit - yi) ** 2)   
+        sstot = np.sum((stain_centers_y - yi) ** 2)   
+        r_squared = ssreg / sstot
+
+        plt.text(100, 100, "R^2 = " + str(r_squared))
+        plt.show()
+        
+        return poly, r_squared
+
+            
 
     def distribution(self):
         pass

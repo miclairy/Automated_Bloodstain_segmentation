@@ -81,16 +81,30 @@ class Stain:
         return direction
 
     def calculate_major_axis(self):
-        x = self.x_ellipse 
-        y = self.y_ellipse
+        x = self.position[0] 
+        y = self.position[1]
+        direction = self.direction()
+
         if self.angle:
-            pty = np.cos(np.deg2rad(self.angle)) * 10000000
-            ptx = np.sin(np.deg2rad(self.angle)) * 10000000
+            pty = np.cos(np.deg2rad(self.angle)) * 1000000
+            ptx = np.sin(np.deg2rad(self.angle)) * 1000000
             x0 = int(x + ptx)
             x1 = int(x - ptx)
             y0 = int(y - pty)
             y1 = int(y + pty)
-            return sorted([(int(x1), int(y1)), (int(x0), int(y0))], key=lambda x : x[0]) 
+            
+            if direction != "?":
+                if direction[0] == "left":
+                    x_use = min(x0, x1)
+                else:
+                    x_use = max(x0, x1)
+                if direction[1] == "up":
+                    y_use = min(y0, y1)
+                else:
+                    y_use = max(y0, y1)
+                print(x, y)
+                return sorted([(x, y), (int(x_use), int(y_use))], key=lambda x : x[0]) 
+            return sorted([(int(x0), int(y0)), (int(x1), int(y1))], key=lambda x : x[0]) 
 
     def area_half(self, half_contour):
         if len(half_contour) > 0:
@@ -126,7 +140,7 @@ class Stain:
         #    cv2.drawContours(image, [self.right_half], 0, (255,255,0), 3)
         if self.angle:
             cv2.line(image , self.major_axis[0], self.major_axis[1], (255,0,0))
-        # cv2.putText(image, anotation, (int(self.position[0] + 10), int(self.position[1] + 30)), font, 1, (0,255,255), 2, cv2.LINE_AA)
+        cv2.putText(image, anotation, (int(self.position[0] + 10), int(self.position[1] + 30)), font, 1, (0,255,255), 2, cv2.LINE_AA)
 
     def label(self):
         points = [x[0] for x in self.contour.tolist() ]
