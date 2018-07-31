@@ -27,8 +27,8 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
 
     def segment_image(self):
         if self.file_name != "":
-            image = cv2.imread(self.file_name)
-            orginal = cv2.imread(self.file_name)
+            image = cv2.imread(str(self.file_name))
+            orginal = cv2.imread(str(self.file_name))
             result = Seg.stain_segmentation(image, orginal)
             height, width, byteValue = result.shape
             bytesPerLine = 3 * width
