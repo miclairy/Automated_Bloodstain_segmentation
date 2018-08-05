@@ -38,8 +38,9 @@ def CLI():
         return
 
     result = stain_segmentation(image, orginal)
-    display_result(result)
+    # display_result(result)
     # export_data(filename)
+    export_obj(save_path)
     # cv2.imwrite(save_path, result)
 
 
@@ -73,8 +74,9 @@ def stain_segmentation(image, orginal):
     
     analyseContours(contours, orginal, image, scale)
     # pattern.convergence()
-    pattern.linearity()
+    # pattern.linearity()
     # label_stains()
+    
     # t1 = time.time()
     return image
 
@@ -101,7 +103,6 @@ def label_stains():
 def analyseContours(contours, orginal, image, scale):
    # area = float('inf')
     count = 0
-    print(pattern.stains)
     for contour in contours:
         if cv2.contourArea(contour) > 0:
             stain = bloodstain.Stain(count, contour, scale, orginal)
@@ -109,7 +110,6 @@ def analyseContours(contours, orginal, image, scale):
             stain.draw_ellipse(image)
             stain.annotate(image)
             count += 1
-    print(pattern.stains)
     print("Count: ", count)
 
 def export_data(save_path):
@@ -124,7 +124,14 @@ def export_data(save_path):
                                 quotechar='"', quoting=csv.QUOTE_MINIMAL)
             for stain in pattern.stains:
                 stain.write_data(data_writer)
-                points_writer.writerow(stain.label())      
+                points_writer.writerow(stain.label())
+
+def export_obj(save_path):
+    save_path = "E:\\PointNet_Data\\" + save_path.split("Cropped Data\\")[1]
+    file_name = os.path.splitext(save_path)[0]
+    with open(file_name + '_points.pts', 'w', newline='') as f:
+        for stain in pattern.stains:
+            f.write(stain.obj_format()) 
 
 def display_result(img_original) :
     while True:

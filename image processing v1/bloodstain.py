@@ -102,7 +102,7 @@ class Stain:
                     y_use = min(y0, y1)
                 else:
                     y_use = max(y0, y1)
-                print(x, y)
+                # print(x, y)
                 return sorted([(x, y), (int(x_use), int(y_use))], key=lambda x : x[0]) 
             return sorted([(int(x0), int(y0)), (int(x1), int(y1))], key=lambda x : x[0]) 
 
@@ -146,6 +146,13 @@ class Stain:
         points = [x[0] for x in self.contour.tolist() ]
 
         return [self.id] + points
+
+    def obj_format(self):
+        points = [x[0] for x in self.contour.tolist() ]
+        str_points = ""
+        for pt in points:
+            str_points += "{} {} 0\n".format(pt[0], pt[1])
+        return str_points
 
     def get_summary_data(self):
         return [self.id, self.position[0], self.position[1], self.area, self.area_mm, self.width, self.height, \
