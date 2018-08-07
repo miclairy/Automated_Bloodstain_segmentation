@@ -27,7 +27,7 @@ class Pattern:
                     intersects.append(intersect)
                 j += 1
                 still_left = stains[j].major_axis[0][0] < axis[1][0] 
-        print("intersects:" ,intersects)
+        # print("intersects:" ,intersects)
         # TODO work out what to do here and clean up the code!
 
 
