@@ -95,13 +95,13 @@ class Stain:
             
             if direction != "?":
                 if direction[0] == "left":
-                    x_use = min(x0, x1)
-                else:
                     x_use = max(x0, x1)
-                if direction[1] == "up":
-                    y_use = min(y0, y1)
                 else:
+                    x_use = min(x0, x1)
+                if direction[1] == "up":
                     y_use = max(y0, y1)
+                else:
+                    y_use = min(y0, y1)
                 # print(x, y)
                 return sorted([(x, y), (int(x_use), int(y_use))], key=lambda x : x[0]) 
             return sorted([(int(x0), int(y0)), (int(x1), int(y1))], key=lambda x : x[0]) 
@@ -139,7 +139,7 @@ class Stain:
         #    cv2.drawContours(image, [self.left_half], 0, (255,255,0), 3)
         #    cv2.drawContours(image, [self.right_half], 0, (255,255,0), 3)
         if self.angle:
-            cv2.line(image , self.major_axis[0], self.major_axis[1], (255,0,0))
+            cv2.line(image , self.major_axis[0], self.major_axis[1], (255,0,0), 2)
         cv2.putText(image, anotation, (int(self.position[0] + 10), int(self.position[1] + 30)), font, 1, (0,255,255), 2, cv2.LINE_AA)
 
     def label(self):
@@ -147,11 +147,11 @@ class Stain:
 
         return [self.id] + points
 
-    def obj_format(self):
+    def obj_format(self, width, height):
         points = [x[0] for x in self.contour.tolist() ]
         str_points = ""
         for pt in points:
-            str_points += "{} {} 0\n".format(pt[0], pt[1])
+            str_points += "{} {} 0\n".format(pt[0] / width, pt[1] / height)
         return str_points
 
     def get_summary_data(self):

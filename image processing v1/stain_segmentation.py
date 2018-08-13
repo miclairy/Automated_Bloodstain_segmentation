@@ -19,7 +19,6 @@ pattern = Pattern()
 def CLI():
     filename = None if not parse_args()['filename'] else path + parse_args()['filename']
     full_path = parse_args()['full_path']
-    print(full_path)
     if full_path:
         filename = full_path
         save_path = os.path.splitext(full_path)[0]  + " result.jpg"
@@ -37,11 +36,14 @@ def CLI():
         print("No image file found")
         return
 
+    height, width = image.shape[:2]
+    pattern.image = image
     result = stain_segmentation(image, orginal)
-    # display_result(result)
+    display_result(result)
+    pattern.convergence()
     # export_data(filename)
-    export_obj(save_path)
-    # cv2.imwrite(save_path, result)
+    # export_obj(save_path, width, height)
+    cv2.imwrite(save_path, result)
 
 
 def stain_segmentation(image, orginal):
@@ -73,7 +75,7 @@ def stain_segmentation(image, orginal):
     cv2.drawContours(image, contours, -1, (255,0,255), 3)
     
     analyseContours(contours, orginal, image, scale)
-    # pattern.convergence()
+    
     # pattern.linearity()
     # label_stains()
     
@@ -126,12 +128,13 @@ def export_data(save_path):
                 stain.write_data(data_writer)
                 points_writer.writerow(stain.label())
 
-def export_obj(save_path):
-    save_path = "E:\\PointNet_Data\\" + save_path.split("Cropped Data\\")[1]
+def export_obj(save_path, width, height):
+    # save_path = "E:\\PointNet_Data\\" + save_path.split("Cropped Data\\")[1]
     file_name = os.path.splitext(save_path)[0]
+    print(file_name)
     with open(file_name + '_points.pts', 'w', newline='') as f:
         for stain in pattern.stains:
-            f.write(stain.obj_format()) 
+            f.write(stain.obj_format(width, height) )
 
 def display_result(img_original) :
     while True:
