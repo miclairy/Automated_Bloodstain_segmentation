@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from scipy.stats import kde
+from scipy.spatial import ConvexHull
 import cv2
 
 
@@ -130,9 +131,21 @@ class Pattern:
         plt.text(100, 100, "R^2 = " + str(r_squared))
         plt.show()
         
-        return poly, r_squared
-
-            
+        return poly, r_squared        
 
     def distribution(self):
-        pass
+        stain_number = len(self.stains)
+        points = []
+        for stain in self.stains:
+            points += (stain.contour[:,0]).tolist()
+        points = np.array(points)
+        hull = ConvexHull(points)
+
+        plt.plot(points[:,0], points[:,1], 'o')
+        for simplex in hull.simplices:
+            plt.plot(points[simplex, 0], points[simplex, 1], 'k-')
+        plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=2)
+        plt.plot(points[hull.vertices[0],0], points[hull.vertices[0],1], 'ro')
+        plt.show()
+
+        
