@@ -36,7 +36,7 @@ class Pattern:
                 j += 1
                 still_left = stains[j].major_axis[0][0] < axis[1][0] 
 
-        self.plot_convergence(intersects)
+        return self.plot_convergence(intersects)
 
     def plot_convergence(self, intersects):
 
@@ -54,10 +54,11 @@ class Pattern:
         k = kde.gaussian_kde([x,y])
         xi, yi = np.mgrid[min(x):max(x):nbins*1j, min(y):max(y):nbins*1j]
         point_density = k(np.vstack([xi.flatten(), yi.flatten()]))
-        box = self.calculate_convergence_box(point_density, xi, yi)
+        box, convergence_point = self.calculate_convergence_box(point_density, xi, yi)
         self.plot_density_heatmap(ax2, x, y, xi, yi, point_density, box, fig)
         
         plt.show()
+        return box, convergence_point
 
     def plot_intersection_scatter(self, ax1, x, y):
         height, width = self.image.shape[:2]
@@ -94,7 +95,7 @@ class Pattern:
         box_width = max(most_dense_points_x) - box_min_x 
         box_height = max(most_dense_points_y) - box_min_y
         box = patches.Rectangle((box_min_x, box_min_y), box_width, box_height, linewidth=1, edgecolor='black', facecolor='none')
-        return box
+        return box, convergence_point
 
     def line_intersection(self, line1, line2):
         xdiff = (line1[0][0] - line1[1][0], line2[0][0] - line2[1][0])
@@ -135,9 +136,11 @@ class Pattern:
 
     def distribution(self):
         stain_number = len(self.stains)
+        stains_area = 0
         points = []
         for stain in self.stains:
             points += (stain.contour[:,0]).tolist()
+            stains_area += stain.area
         points = np.array(points)
         hull = ConvexHull(points)
 
@@ -146,6 +149,23 @@ class Pattern:
             plt.plot(points[simplex, 0], points[simplex, 1], 'k-')
         plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=2)
         plt.plot(points[hull.vertices[0],0], points[hull.vertices[0],1], 'ro')
+
+        ratio_stain_number = stain_number / hull.volume
+        ratio_stain_area = stains_area / hull.volume
+        print(hull.volume)
+        print(stains_area)
+        print(ratio_stain_number)
+        print(ratio_stain_area)
+        
         plt.show()
+        return ratio_stain_number, ratio_stain_area
+
+    def get_summary_data(self):
+        return [self.linearity()[0], self.linearity()[1], self.distribution()[0], 
+                self.distribution()[1], self.convergence()[1], self.convergence()[0]]
+
+        
+
+
 
         

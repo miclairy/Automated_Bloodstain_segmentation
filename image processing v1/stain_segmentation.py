@@ -40,8 +40,9 @@ def CLI():
     pattern.image = image
     result = stain_segmentation(image, orginal)
     display_result(result)
-    pattern.convergence()
-    # export_data(filename)
+    pattern.distribution()
+    # export_stain_data(filename)
+    export_pattern_data(filename)
     # export_obj(save_path, width, height)
     cv2.imwrite(save_path, result)
 
@@ -114,7 +115,7 @@ def analyseContours(contours, orginal, image, scale):
             count += 1
     print("Count: ", count)
 
-def export_data(save_path):
+def export_stain_data(save_path):
     file_name = os.path.splitext(save_path)[0]
     with open(file_name + '_data.csv', 'w', newline='') as csvfile:
         data_writer = csv.writer(csvfile, delimiter=',',
@@ -127,6 +128,15 @@ def export_data(save_path):
             for stain in pattern.stains:
                 stain.write_data(data_writer)
                 points_writer.writerow(stain.label())
+
+def export_pattern_data(save_path):
+    file_name = os.path.splitext(save_path)[0]
+    with open(file_name + '_pattern.csv', 'w', newline='') as csvfile:
+        data_writer = csv.writer(csvfile, delimiter=',',
+                                quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        data_writer.writerow(["Linearity - Polyline fit", "R^2", "Distribution - ratio stain number to convex hull area", 
+                                "ratio stain area to convex hull area", "Convergence - point of highest density", "box of %60 of intersections"])
+        data_writer.writerow(pattern.get_summary_data())
 
 def export_obj(save_path, width, height):
     # save_path = "E:\\PointNet_Data\\" + save_path.split("Cropped Data\\")[1]

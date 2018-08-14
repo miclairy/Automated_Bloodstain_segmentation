@@ -138,9 +138,9 @@ class Stain:
         # if len(self.left_half) > 0:
         #    cv2.drawContours(image, [self.left_half], 0, (255,255,0), 3)
         #    cv2.drawContours(image, [self.right_half], 0, (255,255,0), 3)
-        if self.angle:
-            cv2.line(image , self.major_axis[0], self.major_axis[1], (255,0,0), 2)
-        cv2.putText(image, anotation, (int(self.position[0] + 10), int(self.position[1] + 30)), font, 1, (0,255,255), 2, cv2.LINE_AA)
+        # if self.angle:
+            # cv2.line(image , self.major_axis[0], self.major_axis[1], (255,0,0), 2)
+        # cv2.putText(image, anotation, (int(self.position[0] + 10), int(self.position[1] + 30)), font, 1, (0,255,255), 2, cv2.LINE_AA)
 
     def label(self):
         points = [x[0] for x in self.contour.tolist() ]
