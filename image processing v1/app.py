@@ -19,7 +19,7 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
         self.actionExport.triggered.connect(self.export)
         self.actionSegment_Image.triggered.connect(self.segment_image)
         self.file_name = ""
-        self.populate_table()
+        # self.populate_table()
         self.result = None
 
     def load_image(self):
@@ -44,15 +44,20 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
             orginal = cv2.imread(str(self.file_name))
             self.result = Seg.stain_segmentation(image, orginal)
             result = self.result
+            Seg.pattern.image = image
             height, width, byteValue = self.result.shape
             bytesPerLine = 3 * width
             cv2.cvtColor(result, cv2.COLOR_BGR2RGB, result)
             qImg = QtGui.QImage(result.data, width, height, bytesPerLine, QtGui.QImage.Format_RGB888)
             self.viewer.setPhoto(pixmap=QtGui.QPixmap.fromImage(qImg))
-            self.populate_table()
-    
-    def populate_table(self):
-        self.clear_table()
+            self.populate_tables()
+
+    def populate_tables(self):
+        self.clear_tables()
+        self.populate_stain_table()
+        self.populate_pattern_table()
+
+    def populate_stain_table(self):
         self.tableWidget.setColumnCount(13)
         self.tableWidget.setRowCount(len(Seg.pattern.stains))
         headers = "id;position x;position y;area px;area_mm;width ellipse;height ellipse;angle;gamma;direction;solidity;circularity;intensity"
@@ -66,9 +71,22 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
             j += 1
         self.tableWidget.show()
 
-    def clear_table(self):
+    def populate_pattern_table(self):
+        headers = ["Linearity - Polyline fit", "R^2", "Distribution - ratio stain number to convex hull area", 
+                                "ratio stain area to convex hull area", "Convergence - point of highest density", "box of %60 of intersections"]
+        self.pattern_table_widget.setColumnCount(len(headers))
+        self.pattern_table_widget.setRowCount(1)
+        self.pattern_table_widget.setHorizontalHeaderLabels(headers)
+        pattern_data = Seg.pattern.get_summary_data()
+
+        for i in range(len(pattern_data)):
+            self.pattern_table_widget.setItem(0, i, QtGui.QTableWidgetItem(str(pattern_data[i])))
+
+    def clear_tables(self):
         self.tableWidget.setRowCount(0)
         self.tableWidget.clear()
+        self.pattern_table_widget.setRowCount(0)
+        self.pattern_table_widget.clear()
 
 def main():
     app = QtGui.QApplication(sys.argv)
