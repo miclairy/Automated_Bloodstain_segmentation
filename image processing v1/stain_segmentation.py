@@ -53,7 +53,7 @@ def stain_segmentation(image, orginal):
     # plt.hist(hsv_img.ravel(), 256, [0, 255])
     # plt.xlim([0, 360])
     # plt.show()]
-    
+    pattern.stains = []
     hsv_img = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     scale = parse_args()['scale']
     blur = cv2.GaussianBlur(image, (3,3), 0)

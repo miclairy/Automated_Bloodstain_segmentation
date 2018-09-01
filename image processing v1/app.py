@@ -29,11 +29,14 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
             self.viewer.setPhoto(pixmap=QtGui.QPixmap(self.file_name))
 
     def export(self):
-        save_path = self.file_name
-        Seg.export_stain_data(save_path)
-        # Seg.export_pattern_data(save_path)
-        save_path = os.path.splitext(save_path)[0]
-        cv2.imwrite(save_path + "-result.jpg", self.result)
+        save_path = QtGui.QFileDialog.getSaveFileName(self, 'Open file', 
+         'c:\\')
+        if save_path:
+            Seg.export_stain_data(save_path)
+            # Seg.export_pattern_data(save_path)
+            save_path = os.path.splitext(save_path)[0]
+            cv2.cvtColor(self.result, cv2.COLOR_BGR2RGB, self.result)
+            cv2.imwrite(save_path + "-result.jpg", self.result)
 
     def segment_image(self):
         if self.file_name != "":
@@ -49,6 +52,7 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
             self.populate_table()
     
     def populate_table(self):
+        self.clear_table()
         self.tableWidget.setColumnCount(13)
         self.tableWidget.setRowCount(len(Seg.pattern.stains))
         headers = "id;position x;position y;area px;area_mm;width ellipse;height ellipse;angle;gamma;direction;solidity;circularity;intensity"
@@ -61,6 +65,10 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
                 self.tableWidget.setItem(j,i, QtGui.QTableWidgetItem(str(stain_data[i])))
             j += 1
         self.tableWidget.show()
+
+    def clear_table(self):
+        self.tableWidget.setRowCount(0)
+        self.tableWidget.clear()
 
 def main():
     app = QtGui.QApplication(sys.argv)
