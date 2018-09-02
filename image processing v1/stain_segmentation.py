@@ -42,10 +42,12 @@ def CLI():
     height, width = image.shape[:2]
     pattern.image = image
     pattern.name = filename
+    print("Segmenting stains")
     result = stain_segmentation(image, orginal)
     result_preview(result)
-    pattern.distribution()
+    print("Analysing Stains")
     export_stain_data(save_path)
+    print("Calculating Pattern Metrics")
     pattern.export(save_path)
     cv2.imwrite(save_path + '-result.jpg', result)
     print("Results found in files beginning: " + save_path)
@@ -128,7 +130,7 @@ def analyseContours(contours, orginal, image, scale):
             stain.draw_ellipse(image)
             stain.annotate(image)
             count += 1
-    print("Count: ", count)
+    print("Found {} stains".format(count))
 
 def export_stain_data(save_path):
     
@@ -154,13 +156,14 @@ def export_obj(save_path, width, height):
             f.write(stain.obj_format(width, height) )
 
 def result_preview(img_original) :
+    print("Press 'q' to close preveiw")
     while True:
         # plt.hist(hsv_img.ravel(), 256, [0, 255])
         # plt.xlim([0, 360])
         # plt.show()
         small = cv2.resize(img_original, (0,0), fx=0.25, fy=0.25)
         cv2.imshow('Blood Spatter', small)
-        
+
         if cv2.waitKey(100) & 0xFF == ord('q'):
             cv2.destroyAllWindows()
             break

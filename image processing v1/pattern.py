@@ -92,7 +92,6 @@ class Pattern:
     def calculate_convergence_box(self, point_density, xi, yi):
         most_dense = np.unravel_index(np.argmax(point_density), point_density.shape) # index
         convergence_point = (xi.flatten()[most_dense], yi.flatten()[most_dense])
-        print("most dense point", convergence_point)
 
         bound = point_density[most_dense] * 0.6
         most_dense_points_x = xi.flatten()[np.where(point_density > bound)]
@@ -204,9 +203,10 @@ class Pattern:
         with open(file_name + '_pattern.csv', 'w', newline='') as csvfile:
             data_writer = csv.writer(csvfile, delimiter=',',
                                     quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            data_writer.writerow(["Linearity - Polyline fit", "R^2", "Distribution - ratio stain number to convex hull area", 
-                                    "ratio stain area to convex hull area", "Convergence - point of highest density", "box of %60 of intersections"])
-            data_writer.writerow(data)
+            metrics = ["Linearity - Polyline fit", "R^2", "Distribution - ratio stain number to convex hull area", 
+                                    "ratio stain area to convex hull area", "Convergence - point of highest density", "box of %60 of intersections"]
+            for i in range(len(metrics)):
+                data_writer.writerow([metrics[i], data[i]])
     
         for name, figure in self.plots.items():
             figure.savefig(file_name + "_" + name + ".png")

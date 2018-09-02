@@ -13,6 +13,7 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
     def __init__(self, parent=None):
         super(BPA_App, self).__init__(parent)
         self.setupUi(self)
+        self.setWindowTitle("Automated Blood Stain Pattern Analysis - ABPA")
         self.viewer = PhotoViewer(self.centralwidget)
         self.viewer.setMinimumSize(500, 500)
         self.horizontalLayout.addWidget(self.viewer)
@@ -28,6 +29,7 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
          'c:\\',"Image files (*.jpg *.gif *.png *.tif)")
         if self.file_name:
             self.viewer.setPhoto(pixmap=QtGui.QPixmap(self.file_name))
+            self.setWindowTitle("ABPA - " + self.file_name)
 
     def export(self):
         save_path = QtGui.QFileDialog.getSaveFileName(self, 'Open file', 
@@ -89,15 +91,16 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
         self.tableWidget.show()
 
     def populate_pattern_table(self):
-        headers = ["Linearity - Polyline fit", "R^2", "Distribution - ratio stain number to convex hull area", 
+        metrics = ["Linearity - Polyline fit", "R^2", "Distribution - ratio stain number to convex hull area", 
                                 "ratio stain area to convex hull area", "Convergence - point of highest density", "box of %60 of intersections"]
-        self.pattern_table_widget.setColumnCount(len(headers))
-        self.pattern_table_widget.setRowCount(1)
-        self.pattern_table_widget.setHorizontalHeaderLabels(headers)
+        self.pattern_table_widget.setColumnCount(2)
+        self.pattern_table_widget.setRowCount(len(metrics))
+        self.pattern_table_widget.setHorizontalHeaderLabels(["Metric", "Value"])
         pattern_data = Seg.pattern.get_summary_data()
 
         for i in range(len(pattern_data)):
-            self.pattern_table_widget.setItem(0, i, QtGui.QTableWidgetItem(str(pattern_data[i])))
+            self.pattern_table_widget.setItem(i, 0, QtGui.QTableWidgetItem(str(metrics[i])))
+            self.pattern_table_widget.setItem(i, 1, QtGui.QTableWidgetItem(str(pattern_data[i])))
 
     def clear_tables(self):
         self.tableWidget.setRowCount(0)
