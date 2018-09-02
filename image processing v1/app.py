@@ -43,12 +43,14 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
             image = cv2.imread(str(self.file_name))
             orginal = cv2.imread(str(self.file_name))
             self.result = Seg.stain_segmentation(image, orginal)
-            result = self.result
-            Seg.pattern.image = image
+            result = self.result.copy()
+            # cv2.cvtColor(image, cv2.COLOR_BGR2RGB, image)
+            Seg.pattern.image = result
+            Seg.pattern.name = self.file_name
             height, width, byteValue = self.result.shape
             bytesPerLine = 3 * width
-            cv2.cvtColor(result, cv2.COLOR_BGR2RGB, result)
-            qImg = QtGui.QImage(result.data, width, height, bytesPerLine, QtGui.QImage.Format_RGB888)
+            cv2.cvtColor(self.result, cv2.COLOR_BGR2RGB, self.result)
+            qImg = QtGui.QImage(self.result.data, width, height, bytesPerLine, QtGui.QImage.Format_RGB888)
             self.viewer.setPhoto(pixmap=QtGui.QPixmap.fromImage(qImg))
             self.populate_tables()
 

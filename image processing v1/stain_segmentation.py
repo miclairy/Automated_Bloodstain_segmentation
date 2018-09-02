@@ -38,6 +38,7 @@ def CLI():
 
     height, width = image.shape[:2]
     pattern.image = image
+    pattern.name = filename
     result = stain_segmentation(image, orginal)
     display_result(result)
     pattern.distribution()

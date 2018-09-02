@@ -12,6 +12,7 @@ class Pattern:
         self.stains = stains
         self.elliptical_stains = []
         self.image = None
+        self.name = ""
         for stain in self.stains:
             if stain.ellipse:
                 self.elliptical_stains.append(stain)
@@ -42,7 +43,8 @@ class Pattern:
 
         x_values = [x[0] for x in intersects]
         y_values = [x[1] for x in intersects]
-        fig = plt.figure(1, figsize=(12, 12))
+        fig = plt.figure()
+        fig.canvas.set_window_title('Convergence ' + self.name)
         ax1 = fig.add_subplot(211)
         ax2 = fig.add_subplot(212)
 
@@ -57,7 +59,7 @@ class Pattern:
         box, convergence_point = self.calculate_convergence_box(point_density, xi, yi)
         self.plot_density_heatmap(ax2, x, y, xi, yi, point_density, box, fig)
         
-        plt.show()
+        # plt.show()
         return box, convergence_point
 
     def plot_intersection_scatter(self, ax1, x, y):
@@ -116,7 +118,9 @@ class Pattern:
     def linearity(self):
         stain_centers_x = np.array([stain.position[0] for stain in self.stains])
         stain_centers_y = np.array([stain.position[1] for stain in self.stains])
-        
+        fig = plt.figure()
+        fig.canvas.set_window_title('Linearity ' + self.name)
+
         xp = np.linspace(0, max(stain_centers_x))
         fitted = np.polyfit(stain_centers_x, stain_centers_y, 2)
         poly = np.poly1d(fitted)
@@ -130,7 +134,10 @@ class Pattern:
         r_squared = ssreg / sstot
 
         plt.text(100, 100, "R^2 = " + str(r_squared))
-        plt.show()
+        plt.xlabel("pixels")
+        plt.ylabel("pixels")
+        plt.title("Stain Centers fitted to a degree 2 polynomial")
+        # plt.show()
         
         return poly, r_squared        
 
@@ -144,25 +151,32 @@ class Pattern:
         points = np.array(points)
         hull = ConvexHull(points)
 
+        fig = plt.figure()
+        fig.canvas.set_window_title('Distribution ' + self.name)
+
         plt.plot(points[:,0], points[:,1], 'o')
         for simplex in hull.simplices:
             plt.plot(points[simplex, 0], points[simplex, 1], 'k-')
         plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=2)
         plt.plot(points[hull.vertices[0],0], points[hull.vertices[0],1], 'ro')
 
+        plt.xlabel("pixels")
+        plt.ylabel("pixels")
+        plt.ylim(max(points[:,1]), 0)
+        plt.title("Convex Hull of the stains")
+
         ratio_stain_number = stain_number / hull.volume
         ratio_stain_area = stains_area / hull.volume
-        print(hull.volume)
-        print(stains_area)
-        print(ratio_stain_number)
-        print(ratio_stain_area)
         
-        plt.show()
+        # plt.show()
         return ratio_stain_number, ratio_stain_area
 
     def get_summary_data(self):
-        return [self.linearity()[0], self.linearity()[1], self.distribution()[0], 
-                self.distribution()[1], self.convergence()[1], self.convergence()[0]]
+        poly, r_squared = self.linearity()
+        ratio_stain_number, ratio_stain_area = self.distribution()
+        box, convergence_point = self.convergence()
+        plt.show()
+        return [poly, r_squared,  ratio_stain_number, ratio_stain_area, convergence_point, box]
 
         
 
