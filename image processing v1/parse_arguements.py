@@ -9,6 +9,8 @@ def parse_args():
                         help="scale in pixels per mm", metavar="SCALE", default=7)
     parser.add_argument("-o", "--OutputPath", dest="output_path",
                         help="folder and base name for output", metavar="OUTPUT_PATH")
+    parser.add_argument("-b", "--batch", dest="batch",  default=False,
+                        help="Do not display preview or interactive graph output", metavar="BATCH")
 
     args = parser.parse_args()
     return vars(args)

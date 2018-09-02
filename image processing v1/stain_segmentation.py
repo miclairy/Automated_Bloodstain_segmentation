@@ -40,16 +40,19 @@ def CLI():
         print("No image file found")
         return
 
+    batch = parse_args()['batch']
+
     height, width = image.shape[:2]
     pattern.image = image
     pattern.name = filename
     print("Segmenting stains")
     result = stain_segmentation(image, orginal)
-    result_preview(result)
+    if not batch:
+        result_preview(result)
     print("Analysing Stains")
     export_stain_data(save_path)
     print("Calculating Pattern Metrics")
-    pattern.export(save_path)
+    pattern.export(save_path, batch)
     cv2.imwrite(save_path + '-result.jpg', result)
     print("Results found in files beginning: " + save_path)
     print("Done :)")

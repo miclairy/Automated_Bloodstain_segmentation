@@ -182,7 +182,7 @@ class Pattern:
         # plt.show()
         return ratio_stain_number, ratio_stain_area
 
-    def calculate_summary_data(self):
+    def calculate_summary_data(self, batch=False):
         bar = progressbar.ProgressBar(max_value=3)
         bar.update(0)
         poly, r_squared = self.linearity()
@@ -191,21 +191,22 @@ class Pattern:
         bar.update(2)
         box, convergence_point = self.convergence()
         bar.update(3)
-        plt.show()
+        if not batch:
+            plt.show()
         self.summary_data = [poly, r_squared,  ratio_stain_number, ratio_stain_area, convergence_point, box]
         return self.summary_data
 
-    def get_summary_data(self):
-        return self.summary_data if len(self.summary_data) > 0 else self.calculate_summary_data()
+    def get_summary_data(self, batch=False):
+        return self.summary_data if len(self.summary_data) > 0 else self.calculate_summary_data(batch)
         
     def clear_data(self):
         self.stains = []
         self.summary_data = []   
         self.plots = {}
 
-    def export(self, save_path):
+    def export(self, save_path, batch=False):
         file_name = os.path.splitext(save_path)[0]
-        data = self.get_summary_data()
+        data = self.get_summary_data(batch)
         with open(file_name + '_pattern.csv', 'w', newline='') as csvfile:
             data_writer = csv.writer(csvfile, delimiter=',',
                                     quotechar='"', quoting=csv.QUOTE_MINIMAL)

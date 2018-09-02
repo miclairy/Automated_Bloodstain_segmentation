@@ -24,7 +24,7 @@ def segment_images():
     for filename in os.listdir(path):
         if "jpg" in filename.lower() or "tif" in filename:
             print(filename)
-            call(["python3", "stain_segmentation.py", "-F", path.strip() + filename.strip() , "-s " + str(7)])
+            call(["python3", "stain_segmentation.py", "-F", path.strip() + filename.strip() , "-s " + str(7), "-b", "True"])
             # downsample(path, filename)
             
 def downsample(path, filename):
