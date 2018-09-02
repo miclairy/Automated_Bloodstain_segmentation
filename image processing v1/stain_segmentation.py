@@ -21,14 +21,17 @@ def CLI():
     full_path = parse_args()['full_path']
     if full_path:
         filename = full_path
-        save_path = os.path.splitext(full_path)[0]  + " result.jpg"
-    else:
-        save_path =  '/media/cba62/Elements/Result_data/' + parse_args()['filename']
+
     if not filename:
         print("No file selected")
         return 
-    print(filename)
-
+    print("Processing: " + filename)
+    
+    save_path = set_save_path(filename, parse_args()['output_path'])
+    pattern.scale = parse_args()['scale']
+    if pattern.scale < 1:
+        print("Warning scale is less than 1")
+    
     image = cv2.imread(filename)
     orginal = cv2.imread(filename)
 
@@ -40,13 +43,25 @@ def CLI():
     pattern.image = image
     pattern.name = filename
     result = stain_segmentation(image, orginal)
-    display_result(result)
+    result_preview(result)
     pattern.distribution()
-    # export_stain_data(filename)
-    export_pattern_data(filename)
-    # export_obj(save_path, width, height)
-    cv2.imwrite(save_path, result)
+    export_stain_data(save_path)
+    pattern.export(save_path)
+    cv2.imwrite(save_path + '-result.jpg', result)
+    print("Results found in files beginning: " + save_path)
+    print("Done :)")
 
+
+def set_save_path(full_path, output_path):
+    if output_path:
+        return output_path 
+    
+    if full_path:
+        save_path = os.path.splitext(full_path)[0]
+    else:
+        save_path =  '/media/cba62/Elements/Result_data/' + parse_args()['filename']
+    save_path = os.path.splitext(save_path)[0]
+    return save_path
 
 def stain_segmentation(image, orginal):
    # t0 = time.time()
@@ -54,9 +69,9 @@ def stain_segmentation(image, orginal):
     # plt.hist(hsv_img.ravel(), 256, [0, 255])
     # plt.xlim([0, 360])
     # plt.show()]
-    pattern.stains = []
+    pattern.clear_data()
     hsv_img = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    scale = parse_args()['scale']
+
     blur = cv2.GaussianBlur(image, (3,3), 0)
     gray = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
     gray_hsv = cv2.cvtColor(hsv_img, cv2.COLOR_BGR2GRAY)
@@ -76,9 +91,8 @@ def stain_segmentation(image, orginal):
     im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)    
     cv2.drawContours(image, contours, -1, (255,0,255), 3)
     
-    analyseContours(contours, orginal, image, scale)
+    analyseContours(contours, orginal, image, pattern.scale)
     
-    # pattern.linearity()
     # label_stains()
     
     # t1 = time.time()
@@ -117,27 +131,19 @@ def analyseContours(contours, orginal, image, scale):
     print("Count: ", count)
 
 def export_stain_data(save_path):
-    file_name = os.path.splitext(save_path)[0]
-    with open(file_name + '_data.csv', 'w', newline='') as csvfile:
+    
+    with open(save_path + '_data.csv', 'w', newline='') as csvfile:
         data_writer = csv.writer(csvfile, delimiter=',',
                                 quotechar='"', quoting=csv.QUOTE_MINIMAL)
         data_writer.writerow(["id", "position x", "position y", "area px", "area_mm", "width ellipse", "height ellipse", \
                         "angle", "gamma", "direction", "solidity", "circularity", "intensity"])
-        with open(file_name + "_stains.csv", 'w') as point_file:
+        with open(save_path + "_stains.csv", 'w') as point_file:
             points_writer = csv.writer(point_file, delimiter=',',
                                 quotechar='"', quoting=csv.QUOTE_MINIMAL)
             for stain in pattern.stains:
                 stain.write_data(data_writer)
                 points_writer.writerow(stain.label())
 
-def export_pattern_data(save_path):
-    file_name = os.path.splitext(save_path)[0]
-    with open(file_name + '_pattern.csv', 'w', newline='') as csvfile:
-        data_writer = csv.writer(csvfile, delimiter=',',
-                                quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        data_writer.writerow(["Linearity - Polyline fit", "R^2", "Distribution - ratio stain number to convex hull area", 
-                                "ratio stain area to convex hull area", "Convergence - point of highest density", "box of %60 of intersections"])
-        data_writer.writerow(pattern.get_summary_data())
 
 def export_obj(save_path, width, height):
     # save_path = "E:\\PointNet_Data\\" + save_path.split("Cropped Data\\")[1]
@@ -147,7 +153,7 @@ def export_obj(save_path, width, height):
         for stain in pattern.stains:
             f.write(stain.obj_format(width, height) )
 
-def display_result(img_original) :
+def result_preview(img_original) :
     while True:
         # plt.hist(hsv_img.ravel(), 256, [0, 255])
         # plt.xlim([0, 360])
@@ -215,7 +221,7 @@ def remove_rulers(image):
     print(h)
     crop_img = image[y:y+h, x:x+w2]
    
-    # display_result(crop_img)
+    # result_preview(crop_img)
     return x, y, w2, h
 
 def remove_bottom(no_ruler_crop, y):

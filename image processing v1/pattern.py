@@ -4,15 +4,19 @@ import matplotlib.patches as patches
 from scipy.stats import kde
 from scipy.spatial import ConvexHull
 import cv2
-
+import os
+import csv
 
 class Pattern:
 
     def __init__(self, stains=[]):
         self.stains = stains
+        self.scale = 7.0
         self.elliptical_stains = []
         self.image = None
         self.name = ""
+        self.summary_data = []
+        self.plots = {}
         for stain in self.stains:
             if stain.ellipse:
                 self.elliptical_stains.append(stain)
@@ -45,6 +49,7 @@ class Pattern:
         y_values = [x[1] for x in intersects]
         fig = plt.figure()
         fig.canvas.set_window_title('Convergence ' + self.name)
+        self.plots['convergence'] = fig
         ax1 = fig.add_subplot(211)
         ax2 = fig.add_subplot(212)
 
@@ -58,6 +63,7 @@ class Pattern:
         point_density = k(np.vstack([xi.flatten(), yi.flatten()]))
         box, convergence_point = self.calculate_convergence_box(point_density, xi, yi)
         self.plot_density_heatmap(ax2, x, y, xi, yi, point_density, box, fig)
+        plt.tight_layout()
         
         # plt.show()
         return box, convergence_point
@@ -120,6 +126,7 @@ class Pattern:
         stain_centers_y = np.array([stain.position[1] for stain in self.stains])
         fig = plt.figure()
         fig.canvas.set_window_title('Linearity ' + self.name)
+        self.plots['linearity'] = fig
 
         xp = np.linspace(0, max(stain_centers_x))
         fitted = np.polyfit(stain_centers_x, stain_centers_y, 2)
@@ -139,7 +146,10 @@ class Pattern:
         plt.title("Stain Centers fitted to a degree 2 polynomial")
         # plt.show()
         
-        return poly, r_squared        
+        str_poly = str(poly).split('\n')[1]
+        squared_term = str_poly.find('x') + 1
+        str_poly = str_poly[:squared_term] + "^2" + str_poly[squared_term:]
+        return str_poly, r_squared        
 
     def distribution(self):
         stain_number = len(self.stains)
@@ -153,6 +163,7 @@ class Pattern:
 
         fig = plt.figure()
         fig.canvas.set_window_title('Distribution ' + self.name)
+        self.plots['distribution'] = fig
 
         plt.plot(points[:,0], points[:,1], 'o')
         for simplex in hull.simplices:
@@ -171,14 +182,37 @@ class Pattern:
         # plt.show()
         return ratio_stain_number, ratio_stain_area
 
-    def get_summary_data(self):
+    def calculate_summary_data(self):
         poly, r_squared = self.linearity()
         ratio_stain_number, ratio_stain_area = self.distribution()
         box, convergence_point = self.convergence()
         plt.show()
-        return [poly, r_squared,  ratio_stain_number, ratio_stain_area, convergence_point, box]
+        self.summary_data = [poly, r_squared,  ratio_stain_number, ratio_stain_area, convergence_point, box]
+        return self.summary_data
 
+    def get_summary_data(self):
+        return self.summary_data if len(self.summary_data) > 0 else self.calculate_summary_data()
         
+    def clear_data(self):
+        self.stains = []
+        self.summary_data = []   
+        self.plots = {}
+
+    def export(self, save_path):
+        file_name = os.path.splitext(save_path)[0]
+        data = self.get_summary_data()
+        with open(file_name + '_pattern.csv', 'w', newline='') as csvfile:
+            data_writer = csv.writer(csvfile, delimiter=',',
+                                    quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            data_writer.writerow(["Linearity - Polyline fit", "R^2", "Distribution - ratio stain number to convex hull area", 
+                                    "ratio stain area to convex hull area", "Convergence - point of highest density", "box of %60 of intersections"])
+            data_writer.writerow(data)
+    
+        for name, figure in self.plots.items():
+            figure.savefig(file_name + "_" + name + ".png")
+        
+
+
 
 
 

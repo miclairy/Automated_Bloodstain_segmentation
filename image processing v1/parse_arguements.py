@@ -7,6 +7,8 @@ def parse_args():
     parser.add_argument("-F", "--AbsoluteFile", help="file from root", dest="full_path")
     parser.add_argument("-s", "--scale", dest="scale", type=int,
                         help="scale in pixels per mm", metavar="SCALE", default=7)
+    parser.add_argument("-o", "--OutputPath", dest="output_path",
+                        help="folder and base name for output", metavar="OUTPUT_PATH")
 
     args = parser.parse_args()
     return vars(args)

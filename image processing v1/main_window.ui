@@ -35,7 +35,7 @@
       <item>
        <widget class="QTabWidget" name="tabWidget">
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <property name="movable">
          <bool>true</bool>
@@ -62,7 +62,7 @@
           <item row="0" column="0">
            <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0">
             <property name="sizeConstraint">
-             <enum>QLayout::SetMinimumSize</enum>
+             <enum>QLayout::SetDefaultConstraint</enum>
             </property>
             <item>
              <widget class="QTableWidget" name="pattern_table_widget">
@@ -73,7 +73,7 @@
                </size>
               </property>
               <property name="autoFillBackground">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>

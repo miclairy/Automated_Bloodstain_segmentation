@@ -2,6 +2,7 @@ import sys
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 import main_window
+import features_dialog as dialogs
 from photo_viewer import PhotoViewer
 import stain_segmentation as Seg
 import cv2
@@ -17,7 +18,7 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
         self.horizontalLayout.addWidget(self.viewer)
         self.actionLoad.triggered.connect(self.load_image)
         self.actionExport.triggered.connect(self.export)
-        self.actionSegment_Image.triggered.connect(self.segment_image)
+        self.actionSegment_Image.triggered.connect(self.show_metrics)
         self.file_name = ""
         # self.populate_table()
         self.result = None
@@ -32,11 +33,25 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
         save_path = QtGui.QFileDialog.getSaveFileName(self, 'Open file', 
          'c:\\')
         if save_path:
-            Seg.export_stain_data(save_path)
-            # Seg.export_pattern_data(save_path)
             save_path = os.path.splitext(save_path)[0]
+            Seg.export_stain_data(save_path)
+            Seg.pattern.export(save_path)
             cv2.cvtColor(self.result, cv2.COLOR_BGR2RGB, self.result)
             cv2.imwrite(save_path + "-result.jpg", self.result)
+
+    def show_metrics(self):
+        Dialog = QtGui.QDialog()
+        self.metric_dialog = dialogs.Ui_SegmenationMetrics()
+        self.metric_dialog.setupUi(Dialog)
+        self.metric_dialog.scale_spin.setMinimum(1)
+        self.metric_dialog.scale_spin.setValue(Seg.pattern.scale)
+        self.metric_dialog.scale_spin.valueChanged.connect(self.update_scale)
+        self.metric_dialog.buttonBox.accepted.connect(self.segment_image)
+
+        Dialog.exec_()
+
+    def update_scale(self, value):
+        Seg.pattern.scale = value
 
     def segment_image(self):
         if self.file_name != "":
