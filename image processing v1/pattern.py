@@ -6,6 +6,7 @@ from scipy.spatial import ConvexHull
 import cv2
 import os
 import csv
+import progressbar
 
 class Pattern:
 
@@ -182,9 +183,14 @@ class Pattern:
         return ratio_stain_number, ratio_stain_area
 
     def calculate_summary_data(self):
+        bar = progressbar.ProgressBar(max_value=3)
+        bar.update(0)
         poly, r_squared = self.linearity()
+        bar.update(1)
         ratio_stain_number, ratio_stain_area = self.distribution()
+        bar.update(2)
         box, convergence_point = self.convergence()
+        bar.update(3)
         plt.show()
         self.summary_data = [poly, r_squared,  ratio_stain_number, ratio_stain_area, convergence_point, box]
         return self.summary_data

@@ -9,6 +9,7 @@ import json
 import csv
 from parse_arguements import parse_args
 from pattern import Pattern
+import progressbar
 
 # path = '/home/cosc/student/cba62/blood-spatter-analysis/Neural Net/bloodstains/cast-off/' 
 #path = "./images/"
@@ -142,7 +143,7 @@ def export_stain_data(save_path):
         with open(save_path + "_stains.csv", 'w') as point_file:
             points_writer = csv.writer(point_file, delimiter=',',
                                 quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            for stain in pattern.stains:
+            for stain in progressbar.progressbar(pattern.stains):
                 stain.write_data(data_writer)
                 points_writer.writerow(stain.label())
 
@@ -156,7 +157,7 @@ def export_obj(save_path, width, height):
             f.write(stain.obj_format(width, height) )
 
 def result_preview(img_original) :
-    print("Press 'q' to close preveiw")
+    print("Press 'q' to close preview")
     while True:
         # plt.hist(hsv_img.ravel(), 256, [0, 255])
         # plt.xlim([0, 360])

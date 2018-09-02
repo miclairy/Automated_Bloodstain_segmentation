@@ -8,6 +8,7 @@ import stain_segmentation as Seg
 import cv2
 from PIL import Image
 import os
+import progressbar
 
 class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
     def __init__(self, parent=None):
@@ -21,6 +22,7 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
         self.actionExport.triggered.connect(self.export)
         self.actionSegment_Image.triggered.connect(self.show_metrics)
         self.file_name = ""
+        self.progressBar.hide()
         # self.populate_table()
         self.result = None
 
@@ -57,6 +59,8 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
 
     def segment_image(self):
         if self.file_name != "":
+            self.progressBar.show()
+            self.progressBar.setValue(0)
             image = cv2.imread(str(self.file_name))
             orginal = cv2.imread(str(self.file_name))
             self.result = Seg.stain_segmentation(image, orginal)
@@ -75,6 +79,8 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
         self.clear_tables()
         self.populate_stain_table()
         self.populate_pattern_table()
+        self.progressBar.setValue(100)
+        self.progressBar.hide()
 
     def populate_stain_table(self):
         self.tableWidget.setColumnCount(13)
@@ -82,8 +88,9 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
         headers = "id;position x;position y;area px;area_mm;width ellipse;height ellipse;angle;gamma;direction;solidity;circularity;intensity"
         self.tableWidget.setHorizontalHeaderLabels(headers.split(";"))
         j = 0
-        for stain in Seg.pattern.stains:
-            print("getting summary data for stain", stain.id, stain.id / len(Seg.pattern.stains) * 100, "%")
+        for stain in progressbar.progressbar(Seg.pattern.stains):
+            percent = (j / len(Seg.pattern.stains)) * 50
+            self.progressBar.setValue(percent)
             stain_data = stain.get_summary_data()            
             for i in range(13):
                 self.tableWidget.setItem(j,i, QtGui.QTableWidgetItem(str(stain_data[i])))

@@ -24,7 +24,7 @@
     <bool>true</bool>
    </property>
    <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
+    <item row="1" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout" stretch="0">
       <property name="sizeConstraint">
        <enum>QLayout::SetMinimumSize</enum>
@@ -35,14 +35,14 @@
       <item>
        <widget class="QTabWidget" name="tabWidget">
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <property name="movable">
          <bool>true</bool>
         </property>
         <widget class="QWidget" name="StainData">
          <attribute name="title">
-          <string>Tab 1</string>
+          <string>Stain Data</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_3">
           <item row="0" column="0">
@@ -56,10 +56,10 @@
         </widget>
         <widget class="QWidget" name="PatternData">
          <attribute name="title">
-          <string>Tab 2</string>
+          <string>Pattern Data</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_2">
-          <item row="0" column="0">
+          <item row="1" column="0">
            <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0">
             <property name="sizeConstraint">
              <enum>QLayout::SetDefaultConstraint</enum>
@@ -84,6 +84,13 @@
        </widget>
       </item>
      </layout>
+    </item>
+    <item row="0" column="0">
+     <widget class="QProgressBar" name="progressBar">
+      <property name="value">
+       <number>24</number>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
