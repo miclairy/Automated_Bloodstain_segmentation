@@ -17,19 +17,21 @@ path = '/media/cba62/Elements/Cropped Data/'
 save_path = '/media/cba62/Elements/Result_data/'
 pattern = Pattern()
 
-def CLI():
-    filename = None if not parse_args()['filename'] else path + parse_args()['filename']
-    full_path = parse_args()['full_path']
+def CLI(args={}):
+    args = parse_args() if not args else args
+    print(args)
+    filename = None if not args['filename'] else path + args['filename']
+    full_path = args['full_path']
     if full_path:
         filename = full_path
 
     if not filename:
         print("No file selected")
         return 
-    print("Processing: " + filename)
+    print("\nProcessing: " + filename)
     
-    save_path = set_save_path(filename, parse_args()['output_path'])
-    pattern.scale = parse_args()['scale']
+    save_path = set_save_path(filename, args['output_path'])
+    pattern.scale = args['scale']
     if pattern.scale < 1:
         print("Warning scale is less than 1")
     
@@ -40,7 +42,7 @@ def CLI():
         print("No image file found")
         return
 
-    batch = parse_args()['batch']
+    batch = args['batch']
 
     height, width = image.shape[:2]
     pattern.image = image
@@ -51,10 +53,10 @@ def CLI():
         result_preview(result)
     print("Analysing Stains")
     export_stain_data(save_path)
-    print("Calculating Pattern Metrics")
+    print("\nCalculating Pattern Metrics")
     pattern.export(save_path, batch)
     cv2.imwrite(save_path + '-result.jpg', result)
-    print("Results found in files beginning: " + save_path)
+    print("\nResults found in files beginning: " + save_path)
     print("Done :)")
 
 
@@ -65,7 +67,7 @@ def set_save_path(full_path, output_path):
     if full_path:
         save_path = os.path.splitext(full_path)[0]
     else:
-        save_path =  '/media/cba62/Elements/Result_data/' + parse_args()['filename']
+        save_path =  '/media/cba62/Elements/Result_data/' + args['filename']
     save_path = os.path.splitext(save_path)[0]
     return save_path
 

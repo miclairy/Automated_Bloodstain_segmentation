@@ -4,7 +4,7 @@ import os
 from subprocess import call
 import cv2
 from parse_arguements import parse_batch_args
-
+import progressbar
 
 def get_folder(): 
     # path = '/home/cosc/student/cba62/blood-spatter-analysis/Neural Net/test/downsampled/'
@@ -21,13 +21,23 @@ def get_folder():
     
     return path
     
-def segment_images(path, out_path, scale):
-    for filename in os.listdir(path):
+def segment_images(path, out_path, scale, progressBar=None):
+    percent = 0
+    increment = (1 / len(os.listdir(path))) * 100
+    for filename in progressbar.progressbar(os.listdir(path)):
         if "jpg" in filename.lower() or "tif" in filename:
+            print("pancale:" ,progressBar.value())
             f = path.strip() + filename.strip()
             # change to python on if errors
-            call(["python", "stain_segmentation.py", "-F", f , "-s", str(scale), "-o", out_path + filename.strip(), "-b", "True"]) 
+            # call(["python", "stain_segmentation.py", "-F", f , "-s", str(scale), "-o", out_path + filename.strip(), "-b", "True"]) 
+            args = {'filename': None, 'full_path': f, 'batch': True, 'scale': scale, 'output_path': out_path}
+            stain_segmentation.CLI(args)
             # downsample(path, filename)
+            if progressBar:
+                percent += increment
+                progressBar.setValue(percent)
+    if progressBar:
+        progressBar.hide()
             
 def downsample(path, filename):
     print(path + filename)

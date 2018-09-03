@@ -11,6 +11,7 @@ from PIL import Image
 import os
 import progressbar
 import batch_process
+import processing_dialog
 
 class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
     def __init__(self, parent=None):
@@ -27,6 +28,7 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
         self.file_name = ""
         self.folder_name = ''
         self.progressBar.hide()
+        self.pixmap = None
         # self.populate_table()
         self.result = None
 
@@ -79,13 +81,17 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
             # cv2.cvtColor(image, cv2.COLOR_BGR2RGB, image)
             Seg.pattern.image = result
             Seg.pattern.name = self.file_name
+            self.set_image()
+            self.populate_tables()
+
+    def set_image(self):
             height, width, byteValue = self.result.shape
             bytesPerLine = 3 * width
             cv2.cvtColor(self.result, cv2.COLOR_BGR2RGB, self.result)
             qImg = QtGui.QImage(self.result.data, width, height, bytesPerLine, QtGui.QImage.Format_RGB888)
-            self.viewer.setPhoto(pixmap=QtGui.QPixmap.fromImage(qImg))
-            self.populate_tables()
-
+            self.pixmap = QtGui.QPixmap.fromImage(qImg)
+            self.viewer.setPhoto(pixmap=self.pixmap)
+            
     def populate_tables(self):
         self.clear_tables()
         self.populate_stain_table()
@@ -96,6 +102,7 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
     def populate_stain_table(self):
         self.tableWidget.setColumnCount(13)
         self.tableWidget.setRowCount(len(Seg.pattern.stains))
+        self.tableWidget.itemClicked.connect(self.show_stain)
         headers = "id;position x;position y;area px;area_mm;width ellipse;height ellipse;angle;gamma;direction;solidity;circularity;intensity"
         self.tableWidget.setHorizontalHeaderLabels(headers.split(";"))
         j = 0
@@ -108,6 +115,11 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
                     self.tableWidget.setItem(j,i, QtGui.QTableWidgetItem(str(stain_data[i])))
             j += 1
         self.tableWidget.show()
+
+    def show_stain(self, item):
+        position = (int(self.tableWidget.item(item.row(), 1).text()),
+                    int(self.tableWidget.item(item.row(), 2).text()))
+        self.viewer.add_rectangle(position[0] - 50, position[1] - 50, 100, 100)
 
     def populate_pattern_table(self):
         metrics = ["Linearity - Polyline fit", "R^2", "Distribution - ratio stain number to convex hull area", 
@@ -143,17 +155,21 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
         self.batch_dialog.output_path_edit.setText(out_folder)
 
     def batch_process(self):
-        # folder_name = QtGui.QFileDialog.getExistingDirectory(None, 'Select a folder:', 'C:\\', QtGui.QFileDialog.ShowDirsOnly)
+        self.progressBar.show()
+        self.progressBar.setValue(0)
         folder_name = self.batch_dialog.folder_path_edit.text()
         output_folder = self.batch_dialog.output_path_edit.text()
-        print(folder_name)
         scale = self.batch_dialog.scale_spin.value()
         if folder_name:
+            Dialog = QtGui.QDialog()
+            self.dialog = processing_dialog.Ui_Dialog()
+            self.dialog.setupUi(Dialog)
             self.setWindowTitle("ABPA - " + folder_name)
             if folder_name[-1] != '/' and folder_name[-1] != '\\':
                 folder_name += "/"
-            batch_process.segment_images(folder_name, output_folder, scale)
-            
+            # Dialog.exec_() 
+            batch_process.segment_images(folder_name, output_folder, scale, self.progressBar)     
+                  
 
 
 def main():

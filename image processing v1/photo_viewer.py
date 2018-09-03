@@ -17,6 +17,8 @@ class PhotoViewer(QtGui.QGraphicsView):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.setBackgroundBrush(QtGui.QBrush(QtGui.QColor(30, 30, 30)))
         self.setFrameShape(QtGui.QFrame.NoFrame)
+        self.highlight = QtGui.QGraphicsRectItem()
+        self._scene.addItem(self.highlight)
 
     def hasPhoto(self):
         return not self._empty
@@ -72,3 +74,16 @@ class PhotoViewer(QtGui.QGraphicsView):
         if self._photo.isUnderMouse():
             self.photoClicked.emit(QtCore.QPoint(event.pos()))
         super(PhotoViewer, self).mousePressEvent(event)
+
+    def add_rectangle(self, x, y, width, height):
+        self.highlight.setRect(x, y, width, height)
+        penRectangle = QtGui.QPen(QtCore.Qt.blue)
+        penRectangle.setWidth(3)
+        self.highlight.setPen(penRectangle)
+        
+        self.fitInView()
+        self._zoom = 5
+        self.scale(5 * 1.25, 5*1.25)
+        self.centerOn(x, y)
+
+        
