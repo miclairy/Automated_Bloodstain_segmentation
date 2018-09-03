@@ -183,37 +183,42 @@ class Pattern:
         # plt.show()
         return ratio_stain_number, ratio_stain_area
 
-    def calculate_summary_data(self, batch=False):
+    def calculate_summary_data(self, to_calculate, batch=False):
         bar = progressbar.ProgressBar(max_value=3)
+        poly, r_squared,  ratio_stain_number, ratio_stain_area, str_convergence, str_box = [""]*6
         bar.update(0)
-        poly, r_squared = self.linearity()
-        r_squared = "{:.4f}".format(r_squared)
+        if to_calculate['linearity']:
+            poly, r_squared = self.linearity()
+            r_squared = "{:.4f}".format(r_squared)
         bar.update(1)
-        ratio_stain_number, ratio_stain_area = self.distribution()
-        ratio_stain_area = "{:.3e}".format(ratio_stain_area)
-        ratio_stain_number = "{:.3e}".format(ratio_stain_number)
+        if to_calculate['distribution']:
+            ratio_stain_number, ratio_stain_area = self.distribution()
+            ratio_stain_area = "{:.3e}".format(ratio_stain_area)
+            ratio_stain_number = "{:.3e}".format(ratio_stain_number)
         bar.update(2)
-        box, convergence_point = self.convergence()
-        str_box = "lower left (x,y) : ({:.1f},{:.1f}) Width : {:.1f} Height : {:.1f}".format(
-            box.get_x(), box.get_y(), box.get_width(), box.get_height())
-        str_convergence = "({:.1f}, {:.1f})".format(*convergence_point)
+        if to_calculate['convergence']:
+            box, convergence_point = self.convergence()
+            str_box = "lower left (x,y) : ({:.1f},{:.1f}) Width : {:.1f} Height : {:.1f}".format(
+                box.get_x(), box.get_y(), box.get_width(), box.get_height())
+            str_convergence = "({:.1f}, {:.1f})".format(*convergence_point)
+
         bar.update(3)
         if not batch:
             plt.show()
         self.summary_data = [poly, r_squared,  ratio_stain_number, ratio_stain_area, str_convergence, str_box]
         return self.summary_data
 
-    def get_summary_data(self, batch=False):
-        return self.summary_data if len(self.summary_data) > 0 else self.calculate_summary_data(batch)
+    def get_summary_data(self, to_calculate, batch=False):
+        return self.summary_data if len(self.summary_data) > 0 else self.calculate_summary_data(to_calculate, batch)
         
     def clear_data(self):
         self.stains = []
         self.summary_data = []   
         self.plots = {}
 
-    def export(self, save_path, batch=False):
+    def export(self, save_path, metrics, batch=False):
         file_name = os.path.splitext(save_path)[0]
-        data = self.get_summary_data(batch)
+        data = self.get_summary_data(metrics, batch)
         with open(file_name + '_pattern.csv', 'w', newline='') as csvfile:
             data_writer = csv.writer(csvfile, delimiter=',',
                                     quotechar='"', quoting=csv.QUOTE_MINIMAL)

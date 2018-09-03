@@ -130,17 +130,28 @@ class Stain:
         else:
             return None
     
-    def annotate(self, image):
+    def annotate(self, image, annotations={
+        'ellipse':True, 'id':True, 'directionality':False, 
+        'center':True, 'gamma':False, 'direction_line': False}):
         font = cv2.FONT_HERSHEY_SIMPLEX
-        anotation = str(self.id) # + " " + str(self.direction())
-        cv2.circle(image, (self.position[0], self.position[1]), 2, (255, 255, 255), -1)     
-        self.draw_ellipse(image)
+        text = ""
         # if len(self.left_half) > 0:
         #    cv2.drawContours(image, [self.left_half], 0, (255,255,0), 3)
         #    cv2.drawContours(image, [self.right_half], 0, (255,255,0), 3)
-        # if self.angle:
-            # cv2.line(image , self.major_axis[0], self.major_axis[1], (255,0,0), 2)
-        cv2.putText(image, anotation, (int(self.position[0] + 10), int(self.position[1] + 30)), font, 1, (0,255,255), 2, cv2.LINE_AA)
+
+        if annotations['ellipse'] and self.ellipse:
+            self.draw_ellipse(image)
+        if annotations['id']:
+            text += str(self.id)
+        if annotations['directionality']:
+            text += " " + str(self.direction())
+        if annotations['center']:
+            cv2.circle(image, (self.position[0], self.position[1]), 2, (255, 255, 255), -1)   
+        if annotations['gamma']:
+            text += " " + str(self.orientaton()[1])
+        if annotations['direction_line'] and self.angle:
+            cv2.line(image , self.major_axis[0], self.major_axis[1], (255,0,0), 2)
+        cv2.putText(image, text, (int(self.position[0] + 10), int(self.position[1] + 30)), font, 1, (0,255,255), 2, cv2.LINE_AA)
 
     def label(self):
         points = [x[0] for x in self.contour.tolist() ]

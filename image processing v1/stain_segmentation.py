@@ -57,7 +57,9 @@ def CLI(args={}):
     print("Analysing Stains")
     export_stain_data(save_path)
     print("\nCalculating Pattern Metrics")
-    pattern.export(save_path, batch)
+    to_calculate= {'linearity': True, 
+                 'convergence': True, 'distribution': True}
+    pattern.export(save_path, to_calculate, batch)
     cv2.imwrite(save_path + '-result.jpg', result)
     print("\nResults found in files beginning: " + save_path)
     print("Done :)")

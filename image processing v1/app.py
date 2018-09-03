@@ -28,8 +28,9 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
         self.folder_name = ''
         self.progressBar.hide()
         self.pixmap = None
-        # self.populate_table()
         self.result = None
+        self.annotations = {}
+        self.pattern_metrics = True
 
     def load_image(self):
         self.file_name = QtGui.QFileDialog.getOpenFileName(self, 'Open file', 
@@ -51,7 +52,7 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
             cv2.cvtColor(self.result, cv2.COLOR_BGR2RGB, self.result)
             cv2.drawContours(self.result, Seg.pattern.contours, -1, (255,0,255), 3)
             for stain in Seg.pattern.stains:
-                stain.annotate(self.result)
+                stain.annotate(self.result, self.annotations)
             cv2.imwrite(save_path + "-result.jpg", self.result)
             self.progressBar.hide()
 
@@ -78,13 +79,16 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
             self.progressBar.setValue(0)
             image = cv2.imread(str(self.file_name))
             orginal = cv2.imread(str(self.file_name))
-            annotations = {'id': self.dialog.id.isChecked(), 
+            self.annotations = {'id': self.dialog.id.isChecked(), 
                         'ellipse': self.dialog.ellipse.isChecked(), 
                         'outline': self.dialog.outline.isChecked(), 
                         'center': self.dialog.center.isChecked(),
                         'directionality': self.dialog.directionality.isChecked(),  
                         'direction_line': self.dialog.direction_line.isChecked(), 
                         'gamma': self.dialog.gamma.isChecked()}
+            self.pattern_metrics = {'linearity': self.dialog.linearity_check.isChecked(),
+                                    'convergence': self.dialog.convergence_check.isChecked(),
+                                    'distribution': self.dialog.distribution_check.isChecked()}
             self.result = Seg.stain_segmentation(image, orginal)
             result = self.result.copy()
             # cv2.cvtColor(image, cv2.COLOR_BGR2RGB, image)
@@ -92,7 +96,7 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
             Seg.pattern.name = self.file_name
             self.set_image()
             self.populate_tables()
-            self.viewer.add_annotations(annotations, Seg.pattern)
+            self.viewer.add_annotations(self.annotations, Seg.pattern)
 
     def set_image(self):
             height, width, byteValue = self.result.shape
@@ -139,7 +143,7 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
         self.pattern_table_widget.setColumnCount(2)
         self.pattern_table_widget.setRowCount(len(metrics))
         self.pattern_table_widget.setHorizontalHeaderLabels(["Metric", "Value"])
-        pattern_data = Seg.pattern.get_summary_data()
+        pattern_data = Seg.pattern.get_summary_data(self.pattern_metrics)
 
         for i in range(len(pattern_data)):
             self.pattern_table_widget.setItem(i, 0, QtGui.QTableWidgetItem(str(metrics[i])))
