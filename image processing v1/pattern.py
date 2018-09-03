@@ -11,6 +11,7 @@ import progressbar
 class Pattern:
 
     def __init__(self, stains=[]):
+        self.contours = []
         self.stains = stains
         self.scale = 7.0
         self.elliptical_stains = []

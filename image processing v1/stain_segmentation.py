@@ -49,6 +49,9 @@ def CLI(args={}):
     pattern.name = filename
     print("Segmenting stains")
     result = stain_segmentation(image, orginal)
+    cv2.drawContours(image, pattern.contours, -1, (255,0,255), 3)
+    for stain in pattern.stains:
+            stain.annotate(image)
     if not batch:
         result_preview(result)
     print("Analysing Stains")
@@ -96,8 +99,9 @@ def stain_segmentation(image, orginal):
     erosion = cv2.erode(thresh, kernel, iterations = 2)
     thresh = cv2.dilate(erosion, kernel, iterations = 2)
 
-    im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)    
-    cv2.drawContours(image, contours, -1, (255,0,255), 3)
+    im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) 
+    pattern.contours = contours   
+    # cv2.drawContours(image, contours, -1, (255,0,255), 3)
     
     analyseContours(contours, orginal, image, pattern.scale)
     
@@ -133,8 +137,6 @@ def analyseContours(contours, orginal, image, scale):
         if cv2.contourArea(contour) > 0:
             stain = bloodstain.Stain(count, contour, scale, orginal)
             pattern.add_stain(stain)
-            stain.draw_ellipse(image)
-            stain.annotate(image)
             count += 1
     print("Found {} stains".format(count))
 

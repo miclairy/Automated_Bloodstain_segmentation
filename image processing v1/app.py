@@ -11,7 +11,6 @@ from PIL import Image
 import os
 import progressbar
 import batch_process
-import processing_dialog
 
 class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
     def __init__(self, parent=None):
@@ -50,6 +49,9 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
             Seg.pattern.export(save_path)
             self.progressBar.setValue(100)
             cv2.cvtColor(self.result, cv2.COLOR_BGR2RGB, self.result)
+            cv2.drawContours(self.result, Seg.pattern.contours, -1, (255,0,255), 3)
+            for stain in Seg.pattern.stains:
+                stain.annotate(self.result)
             cv2.imwrite(save_path + "-result.jpg", self.result)
             self.progressBar.hide()
 
@@ -76,6 +78,13 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
             self.progressBar.setValue(0)
             image = cv2.imread(str(self.file_name))
             orginal = cv2.imread(str(self.file_name))
+            annotations = {'id': self.dialog.id.isChecked(), 
+                        'ellipse': self.dialog.ellipse.isChecked(), 
+                        'outline': self.dialog.outline.isChecked(), 
+                        'center': self.dialog.center.isChecked(),
+                        'directionality': self.dialog.directionality.isChecked(),  
+                        'direction_line': self.dialog.direction_line.isChecked(), 
+                        'gamma': self.dialog.gamma.isChecked()}
             self.result = Seg.stain_segmentation(image, orginal)
             result = self.result.copy()
             # cv2.cvtColor(image, cv2.COLOR_BGR2RGB, image)
@@ -83,6 +92,7 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
             Seg.pattern.name = self.file_name
             self.set_image()
             self.populate_tables()
+            self.viewer.add_annotations(annotations, Seg.pattern)
 
     def set_image(self):
             height, width, byteValue = self.result.shape
@@ -103,22 +113,24 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
         self.tableWidget.setColumnCount(13)
         self.tableWidget.setRowCount(len(Seg.pattern.stains))
         self.tableWidget.itemClicked.connect(self.show_stain)
-        headers = "id;position x;position y;area px;area_mm;width ellipse;height ellipse;angle;gamma;direction;solidity;circularity;intensity"
+        headers = "position x;position y;area px;area_mm;width ellipse;height ellipse;angle;gamma;direction;solidity;circularity;intensity"
         self.tableWidget.setHorizontalHeaderLabels(headers.split(";"))
+        ids = [str(i) for i in range(0, len(Seg.pattern.stains))]
+        self.tableWidget.setVerticalHeaderLabels(ids)
         j = 0
         for stain in progressbar.progressbar(Seg.pattern.stains):
             percent = (j / len(Seg.pattern.stains)) * 50
             self.progressBar.setValue(percent)
             stain_data = stain.get_summary_data()            
-            for i in range(13):
+            for i in range(1,13):
                 if stain_data[i] != None:
-                    self.tableWidget.setItem(j,i, QtGui.QTableWidgetItem(str(stain_data[i])))
+                    self.tableWidget.setItem(j,i-1, QtGui.QTableWidgetItem(str(stain_data[i])))
             j += 1
         self.tableWidget.show()
 
     def show_stain(self, item):
-        position = (int(self.tableWidget.item(item.row(), 1).text()),
-                    int(self.tableWidget.item(item.row(), 2).text()))
+        position = (int(self.tableWidget.item(item.row(), 0).text()),
+                    int(self.tableWidget.item(item.row(), 1).text()))
         self.viewer.add_rectangle(position[0] - 50, position[1] - 50, 100, 100)
 
     def populate_pattern_table(self):
@@ -162,12 +174,10 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
         scale = self.batch_dialog.scale_spin.value()
         if folder_name:
             Dialog = QtGui.QDialog()
-            self.dialog = processing_dialog.Ui_Dialog()
             self.dialog.setupUi(Dialog)
             self.setWindowTitle("ABPA - " + folder_name)
             if folder_name[-1] != '/' and folder_name[-1] != '\\':
                 folder_name += "/"
-            # Dialog.exec_() 
             batch_process.segment_images(folder_name, output_folder, scale, self.progressBar)     
                   
 

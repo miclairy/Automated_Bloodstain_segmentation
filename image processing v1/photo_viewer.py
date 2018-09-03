@@ -86,4 +86,70 @@ class PhotoViewer(QtGui.QGraphicsView):
         self.scale(5 * 1.25, 5*1.25)
         self.centerOn(x, y)
 
-        
+    def add_text(self, stain, text):
+        text = QtGui.QGraphicsTextItem(str(text))
+        font = QtGui.QFont()
+        font.setPointSize(30)
+        text.setFont(font)
+        text.setDefaultTextColor(QtCore.Qt.yellow)
+        text.setX(stain.position[0])
+        text.setY(stain.position[1])
+        self._scene.addItem(text)
+
+    def add_outline(self, stain):
+        poly = QtGui.QPolygonF()
+        for pt in stain.contour.tolist():
+            poly.append(QtCore.QPointF(*pt[0]))
+        outline = QtGui.QGraphicsPolygonItem(poly)
+        pen = QtGui.QPen(QtCore.Qt.magenta)
+        pen.setWidth(3)
+        outline.setPen(pen)
+        self._scene.addItem(outline)
+
+    def add_direction_line(self, stain):
+        if stain.major_axis:
+            poly = QtGui.QPolygonF()
+            poly.append(QtCore.QPointF(*stain.major_axis[0]))
+            poly.append(QtCore.QPointF(*stain.major_axis[1]))
+            line = QtGui.QGraphicsPolygonItem(poly)
+            pen = QtGui.QPen(QtCore.Qt.darkBlue)
+            pen.setWidth(2)
+            line.setPen(pen)
+            self._scene.addItem(line)
+
+    def add_center(self, stain):
+        center = QtGui.QGraphicsEllipseItem(stain.position[0], stain.position[1], 1, 1)
+        pen = QtGui.QPen(QtCore.Qt.white)
+        pen.setWidth(3)
+        center.setPen(pen)
+        self._scene.addItem(center)
+
+    def add_ellipse(self, stain):
+        if stain.ellipse != None:
+            ellipse = QtGui.QGraphicsEllipseItem(stain.x_ellipse - (stain.width / 2), stain.y_ellipse - (stain.height / 2), stain.width, stain.height)
+            ellipse.setTransformOriginPoint(QtCore.QPointF(stain.x_ellipse, stain.y_ellipse ))
+            ellipse.setRotation(stain.angle)
+            pen = QtGui.QPen(QtCore.Qt.green)
+            pen.setWidth(3)
+            ellipse.setPen(pen)
+            self._scene.addItem(ellipse)
+
+
+    def add_annotations(self, annotations, pattern):
+        for stain in pattern.stains:
+            text = ""
+            if annotations['outline']:
+                self.add_outline(stain)
+            if annotations['ellipse']:
+                self.add_ellipse(stain)
+            if annotations['id']:
+                text += str(stain.id)
+            if annotations['directionality']:
+                text += " " + str(stain.direction())
+            if annotations['center']:
+                self.add_center(stain)
+            if annotations['gamma']:
+                text += " " + str(stain.orientaton()[1])
+            if annotations['direction_line']:
+                self.add_direction_line(stain)
+            self.add_text(stain, text)
