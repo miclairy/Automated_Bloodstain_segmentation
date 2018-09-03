@@ -5,8 +5,8 @@ from subprocess import call
 import cv2
 from parse_arguements import parse_batch_args
 
-def segment_images():
-    
+
+def get_folder(): 
     # path = '/home/cosc/student/cba62/blood-spatter-analysis/Neural Net/test/downsampled/'
     # path = '/home/cosc/student/cba62/blood-spatter-analysis/image processing v1/images/'
     path = '/media/cba62/Elements/Cropped Data/'
@@ -18,13 +18,15 @@ def segment_images():
     if not path:
         print("No folder selected")
         return 
-    print(path)
     
-
+    return path
+    
+def segment_images(path, out_path, scale):
     for filename in os.listdir(path):
         if "jpg" in filename.lower() or "tif" in filename:
-            print(filename)
-            call(["python3", "stain_segmentation.py", "-F", path.strip() + filename.strip() , "-s " + str(7), "-b", "True"])
+            f = path.strip() + filename.strip()
+            # change to python on if errors
+            call(["python", "stain_segmentation.py", "-F", f , "-s", str(scale), "-o", out_path + filename.strip(), "-b", "True"]) 
             # downsample(path, filename)
             
 def downsample(path, filename):
@@ -36,4 +38,8 @@ def downsample(path, filename):
 
 
 if __name__ == '__main__':
-    segment_images()
+    path = get_folder()
+    out_path = path if not parse_batch_args()['output_path'] else parse_batch_args()['output_path']
+    scale = 7 if not parse_batch_args()['scale'] else parse_batch_args()['scale']
+    if path != None:
+        segment_images(path, out_path, scale)

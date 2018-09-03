@@ -240,7 +240,7 @@
     </font>
    </property>
    <property name="text">
-    <string>Stain Metrics</string>
+    <string>Annotations</string>
    </property>
    <property name="textFormat">
     <enum>Qt::AutoText</enum>

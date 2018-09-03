@@ -175,7 +175,7 @@ class Ui_SegmenationMetrics(object):
         self.convergence_check.setText(_translate("SegmenationMetrics", "Convergence", None))
         self.distribution_check.setText(_translate("SegmenationMetrics", "Distribution of Elements", None))
         self.label.setText(_translate("SegmenationMetrics", "Pattern Metrics", None))
-        self.label_2.setText(_translate("SegmenationMetrics", "Stain Metrics", None))
+        self.label_2.setText(_translate("SegmenationMetrics", "Annotations", None))
         self.label_3.setText(_translate("SegmenationMetrics", "Scale", None))
         self.label_4.setText(_translate("SegmenationMetrics", "Scale", None))
 

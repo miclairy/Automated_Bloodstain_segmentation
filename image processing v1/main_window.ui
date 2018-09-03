@@ -115,7 +115,7 @@
      <string>Process</string>
     </property>
     <addaction name="actionSegment_Image"/>
-    <addaction name="actionCrop_rulers"/>
+    <addaction name="actionBatch_process"/>
    </widget>
    <addaction name="menuChoose_Image"/>
    <addaction name="menuProcess"/>
@@ -136,9 +136,9 @@
     <string>Segment Image</string>
    </property>
   </action>
-  <action name="actionCrop_rulers">
+  <action name="actionBatch_process">
    <property name="text">
-    <string>Crop rulers</string>
+    <string>Batch Process</string>
    </property>
   </action>
  </widget>

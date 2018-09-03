@@ -186,14 +186,20 @@ class Pattern:
         bar = progressbar.ProgressBar(max_value=3)
         bar.update(0)
         poly, r_squared = self.linearity()
+        r_squared = "{:.4f}".format(r_squared)
         bar.update(1)
         ratio_stain_number, ratio_stain_area = self.distribution()
+        ratio_stain_area = "{:.3e}".format(ratio_stain_area)
+        ratio_stain_number = "{:.3e}".format(ratio_stain_number)
         bar.update(2)
         box, convergence_point = self.convergence()
+        str_box = "lower left (x,y) : ({:.1f},{:.1f}) Width : {:.1f} Height : {:.1f}".format(
+            box.get_x(), box.get_y(), box.get_width(), box.get_height())
+        str_convergence = "({:.1f}, {:.1f})".format(*convergence_point)
         bar.update(3)
         if not batch:
             plt.show()
-        self.summary_data = [poly, r_squared,  ratio_stain_number, ratio_stain_area, convergence_point, box]
+        self.summary_data = [poly, r_squared,  ratio_stain_number, ratio_stain_area, str_convergence, str_box]
         return self.summary_data
 
     def get_summary_data(self, batch=False):

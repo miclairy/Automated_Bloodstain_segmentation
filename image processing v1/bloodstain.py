@@ -155,8 +155,17 @@ class Stain:
         return str_points
 
     def get_summary_data(self):
-        return [self.id, self.position[0], self.position[1], self.area, self.area_mm, self.width, self.height, \
+        summary_data = [self.id, self.position[0], self.position[1], int(self.area), self.area_mm, self.width, self.height, \
                 self.orientaton()[0], self.orientaton()[1], str(self.direction()), self.solidity(), self.circularity(), self.intensity(self.original)]
+        formatted = []
+        for data in summary_data:
+            if (data == float('inf')):
+                data = None
+            if (isinstance(data, float)):
+                formatted.append("{:.3f}".format(data))
+            else:
+                formatted.append(data)
+        return formatted
     
     def write_data(self, writer):
         writer.writerow(self.get_summary_data())

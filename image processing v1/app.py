@@ -2,13 +2,15 @@ import sys
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 import main_window
-import features_dialog as dialogs
+import features_dialog
+import batch_dialog
 from photo_viewer import PhotoViewer
 import stain_segmentation as Seg
 import cv2
 from PIL import Image
 import os
 import progressbar
+import batch_process
 
 class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
     def __init__(self, parent=None):
@@ -21,7 +23,9 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
         self.actionLoad.triggered.connect(self.load_image)
         self.actionExport.triggered.connect(self.export)
         self.actionSegment_Image.triggered.connect(self.show_metrics)
+        self.actionBatch_process.triggered.connect(self.show_batch_dialog)
         self.file_name = ""
+        self.folder_name = ''
         self.progressBar.hide()
         # self.populate_table()
         self.result = None
@@ -38,21 +42,28 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
          'c:\\')
         if save_path:
             save_path = os.path.splitext(save_path)[0]
-            Seg.export_stain_data(save_path)
+            self.progressBar.show()
+            self.progressBar.setValue(0)
+            Seg.export_stain_data(save_path, self.progressBar)
             Seg.pattern.export(save_path)
+            self.progressBar.setValue(100)
             cv2.cvtColor(self.result, cv2.COLOR_BGR2RGB, self.result)
             cv2.imwrite(save_path + "-result.jpg", self.result)
+            self.progressBar.hide()
 
     def show_metrics(self):
-        Dialog = QtGui.QDialog()
-        self.metric_dialog = dialogs.Ui_SegmenationMetrics()
-        self.metric_dialog.setupUi(Dialog)
-        self.metric_dialog.scale_spin.setMinimum(1)
-        self.metric_dialog.scale_spin.setValue(Seg.pattern.scale)
-        self.metric_dialog.scale_spin.valueChanged.connect(self.update_scale)
-        self.metric_dialog.buttonBox.accepted.connect(self.segment_image)
-
+        Dialog = self.show_dialog(features_dialog.Ui_SegmenationMetrics(), self.segment_image)
         Dialog.exec_()
+
+    def show_dialog(self, dialog, accept):
+        Dialog = QtGui.QDialog()
+        self.dialog = dialog
+        self.dialog.setupUi(Dialog)
+        self.dialog.scale_spin.setMinimum(1)
+        self.dialog.scale_spin.setValue(Seg.pattern.scale)
+        self.dialog.scale_spin.valueChanged.connect(self.update_scale)
+        self.dialog.buttonBox.accepted.connect(accept)
+        return Dialog
 
     def update_scale(self, value):
         Seg.pattern.scale = value
@@ -93,7 +104,8 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
             self.progressBar.setValue(percent)
             stain_data = stain.get_summary_data()            
             for i in range(13):
-                self.tableWidget.setItem(j,i, QtGui.QTableWidgetItem(str(stain_data[i])))
+                if stain_data[i] != None:
+                    self.tableWidget.setItem(j,i, QtGui.QTableWidgetItem(str(stain_data[i])))
             j += 1
         self.tableWidget.show()
 
@@ -114,6 +126,35 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
         self.tableWidget.clear()
         self.pattern_table_widget.setRowCount(0)
         self.pattern_table_widget.clear()
+
+    def show_batch_dialog(self):   
+        self.batch_dialog = batch_dialog.Ui_BatchProcessing()
+        Dialog = self.show_dialog(self.batch_dialog, self.batch_process)
+        self.batch_dialog.folder_path.clicked.connect(self.open_folder)
+        self.batch_dialog.output_path.clicked.connect(self.output_folder)
+        Dialog.exec_()
+        
+    def open_folder(self):
+        folder_name = QtGui.QFileDialog.getExistingDirectory(None, 'Select a folder:', 'C:\\', QtGui.QFileDialog.ShowDirsOnly)
+        self.batch_dialog.folder_path_edit.setText(folder_name)
+
+    def output_folder(self):
+        out_folder = QtGui.QFileDialog.getExistingDirectory(None, 'Select a folder:', 'C:\\', QtGui.QFileDialog.ShowDirsOnly)
+        self.batch_dialog.output_path_edit.setText(out_folder)
+
+    def batch_process(self):
+        # folder_name = QtGui.QFileDialog.getExistingDirectory(None, 'Select a folder:', 'C:\\', QtGui.QFileDialog.ShowDirsOnly)
+        folder_name = self.batch_dialog.folder_path_edit.text()
+        output_folder = self.batch_dialog.output_path_edit.text()
+        print(folder_name)
+        scale = self.batch_dialog.scale_spin.value()
+        if folder_name:
+            self.setWindowTitle("ABPA - " + folder_name)
+            if folder_name[-1] != '/' and folder_name[-1] != '\\':
+                folder_name += "/"
+            batch_process.segment_images(folder_name, output_folder, scale)
+            
+
 
 def main():
     app = QtGui.QApplication(sys.argv)

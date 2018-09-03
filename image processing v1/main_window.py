@@ -92,12 +92,12 @@ class Ui_MainWindow(object):
         self.actionExport.setObjectName(_fromUtf8("actionExport"))
         self.actionSegment_Image = QtGui.QAction(MainWindow)
         self.actionSegment_Image.setObjectName(_fromUtf8("actionSegment_Image"))
-        self.actionCrop_rulers = QtGui.QAction(MainWindow)
-        self.actionCrop_rulers.setObjectName(_fromUtf8("actionCrop_rulers"))
+        self.actionBatch_process = QtGui.QAction(MainWindow)
+        self.actionBatch_process.setObjectName(_fromUtf8("actionBatch_process"))
         self.menuChoose_Image.addAction(self.actionLoad)
         self.menuChoose_Image.addAction(self.actionExport)
         self.menuProcess.addAction(self.actionSegment_Image)
-        self.menuProcess.addAction(self.actionCrop_rulers)
+        self.menuProcess.addAction(self.actionBatch_process)
         self.menubar.addAction(self.menuChoose_Image.menuAction())
         self.menubar.addAction(self.menuProcess.menuAction())
 
@@ -114,7 +114,7 @@ class Ui_MainWindow(object):
         self.actionLoad.setText(_translate("MainWindow", "Load", None))
         self.actionExport.setText(_translate("MainWindow", "Export", None))
         self.actionSegment_Image.setText(_translate("MainWindow", "Segment Image", None))
-        self.actionCrop_rulers.setText(_translate("MainWindow", "Crop rulers", None))
+        self.actionBatch_process.setText(_translate("MainWindow", "Batch Process", None))
 
 
 if __name__ == "__main__":

@@ -136,7 +136,7 @@ def analyseContours(contours, orginal, image, scale):
             count += 1
     print("Found {} stains".format(count))
 
-def export_stain_data(save_path):
+def export_stain_data(save_path, progressBar=False):
     
     with open(save_path + '_data.csv', 'w', newline='') as csvfile:
         data_writer = csv.writer(csvfile, delimiter=',',
@@ -146,9 +146,13 @@ def export_stain_data(save_path):
         with open(save_path + "_stains.csv", 'w') as point_file:
             points_writer = csv.writer(point_file, delimiter=',',
                                 quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            i = 0
             for stain in progressbar.progressbar(pattern.stains):
                 stain.write_data(data_writer)
                 points_writer.writerow(stain.label())
+                if (progressBar):
+                    i += (1 / len(pattern.stains)) * 50
+                    progressBar.setValue(i)
 
 
 def export_obj(save_path, width, height):
@@ -255,7 +259,7 @@ def binarize_image(img_original, gray) :
 
     ret, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_TRIANGLE)
     # thresh = cv2.bitwise_not(thresh)
-
+    
     kernel = np.ones((3,3),np.uint8)
     erosion = cv2.erode(thresh, kernel, iterations = 2)
     dilation = cv2.dilate(erosion, kernel, iterations = 2)
