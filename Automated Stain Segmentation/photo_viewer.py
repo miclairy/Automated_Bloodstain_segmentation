@@ -19,6 +19,7 @@ class PhotoViewer(QtGui.QGraphicsView):
         self.setFrameShape(QtGui.QFrame.NoFrame)
         self.highlight = QtGui.QGraphicsRectItem()
         self._scene.addItem(self.highlight)
+        self.annotation_items = QtGui.QGraphicsItemGroup(scene=self._scene)
 
     def hasPhoto(self):
         return not self._empty
@@ -94,7 +95,7 @@ class PhotoViewer(QtGui.QGraphicsView):
         text.setDefaultTextColor(QtCore.Qt.yellow)
         text.setX(stain.position[0])
         text.setY(stain.position[1])
-        self._scene.addItem(text)
+        self.annotation_items.addToGroup(text)
 
     def add_outline(self, stain):
         poly = QtGui.QPolygonF()
@@ -104,7 +105,7 @@ class PhotoViewer(QtGui.QGraphicsView):
         pen = QtGui.QPen(QtCore.Qt.magenta)
         pen.setWidth(3)
         outline.setPen(pen)
-        self._scene.addItem(outline)
+        self.annotation_items.addToGroup(outline)
 
     def add_direction_line(self, stain):
         if stain.major_axis:
@@ -115,14 +116,14 @@ class PhotoViewer(QtGui.QGraphicsView):
             pen = QtGui.QPen(QtCore.Qt.darkBlue)
             pen.setWidth(2)
             line.setPen(pen)
-            self._scene.addItem(line)
+            self.annotation_items.addToGroup(line)
 
     def add_center(self, stain):
         center = QtGui.QGraphicsEllipseItem(stain.position[0], stain.position[1], 1, 1)
         pen = QtGui.QPen(QtCore.Qt.white)
         pen.setWidth(3)
         center.setPen(pen)
-        self._scene.addItem(center)
+        self.annotation_items.addToGroup(center)
 
     def add_ellipse(self, stain):
         if stain.ellipse != None:
@@ -132,10 +133,12 @@ class PhotoViewer(QtGui.QGraphicsView):
             pen = QtGui.QPen(QtCore.Qt.green)
             pen.setWidth(3)
             ellipse.setPen(pen)
-            self._scene.addItem(ellipse)
-
+            self.annotation_items.addToGroup(ellipse)
 
     def add_annotations(self, annotations, pattern):
+        self._scene.removeItem(self.annotation_items)
+        self._scene.update()
+        self.annotation_items = QtGui.QGraphicsItemGroup(scene=self._scene)
         for stain in pattern.stains:
             text = ""
             if annotations['outline']:
