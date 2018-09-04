@@ -18,11 +18,13 @@ Depends on python3, opencv, matplotlib, numpy, pyqt4, progressbar, scipy
 Analyse on image 
 
 <code> python stain_segmentation.py -f [file from base] -F [full file path] -o [output path] -b [True | False] -s [scale] </code>
-  see --help for details
+ 
+ see --help for details
   
 ### Batch Processing
 Analyse a folder of images
 
 <code> python batch_processing.py -F [path to folder] -o [output folder] -s [scale]
+
 see --help for details
   
