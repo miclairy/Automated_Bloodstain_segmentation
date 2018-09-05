@@ -56,6 +56,7 @@ def CLI(args={}):
         result_preview(result)
     print("Analysing Stains")
     export_stain_data(save_path)
+    # export_obj(save_path, width, height)
     print("\nCalculating Pattern Metrics")
     to_calculate= {'linearity': True, 
                  'convergence': True, 'distribution': True}
