@@ -82,7 +82,7 @@ class Stain:
                 # contour = self.contour
                 (x, y), (MA, ma), angle = cv2.fitEllipse(np.array(contour))
                 A = np.pi / 4 * MA * ma
-                if self.area / A > 0.3: 
+                if A > 0 and self.area / A > 0.3: 
                  
                     return cv2.fitEllipse(np.array(contour)), contour
                 else:
@@ -90,7 +90,7 @@ class Stain:
             else:
                 (x, y), (MA, ma), angle = cv2.fitEllipse(np.array(self.contour))
                 A = np.pi / 4 * MA * ma
-                if self.area / A > 0.3: 
+                if A > 0 and self.area / A > 0.3: 
                  
                     return cv2.fitEllipse(np.array(self.contour)), contour
                 else:
@@ -102,7 +102,7 @@ class Stain:
     def draw_ellipse(self, image):
 
         if self.ellipse is not None:
-            cv2.ellipse(image, self.ellipse, (0,255,0), 1)
+            cv2.ellipse(image, self.ellipse, (0,255,0), 2)
 
     def circularity(self):
         if self.ellipse:
