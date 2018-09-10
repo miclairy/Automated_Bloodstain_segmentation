@@ -30,7 +30,7 @@ def segment_images(path, out_path, scale, progressBar=None):
             f = path.strip() + filename.strip()
             # change to python on if errors
             # call(["python", "stain_segmentation.py", "-F", f , "-s", str(scale), "-o", out_path + filename.strip(), "-b", "True"]) 
-            args = {'filename': None, 'full_path': f, 'batch': True, 'scale': scale, 'output_path': out_path}
+            args = {'filename': None, 'full_path': f, 'batch': True, 'scale': scale, 'output_path': out_path + filename.strip()}
             stain_segmentation.CLI(args)
             # downsample(path, filename)
             if progressBar:

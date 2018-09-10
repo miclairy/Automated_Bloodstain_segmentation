@@ -47,7 +47,7 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
             self.progressBar.show()
             self.progressBar.setValue(0)
             Seg.export_stain_data(save_path, self.progressBar)
-            Seg.pattern.export(save_path)
+            Seg.pattern.export(save_path, self.pattern_metrics)
             self.progressBar.setValue(100)
             cv2.cvtColor(self.result, cv2.COLOR_BGR2RGB, self.result)
             cv2.drawContours(self.result, Seg.pattern.contours, -1, (255,0,255), 3)
@@ -182,6 +182,8 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
             self.setWindowTitle("ABPA - " + folder_name)
             if folder_name[-1] != '/' and folder_name[-1] != '\\':
                 folder_name += "/"
+            if output_folder[-1] != '/' and output_folder[-1] != '\\':
+                output_folder += "/"
             batch_process.segment_images(folder_name, output_folder, scale, self.progressBar)     
                   
 
