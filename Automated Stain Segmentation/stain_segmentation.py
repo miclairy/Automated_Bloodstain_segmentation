@@ -49,18 +49,18 @@ def CLI(args={}):
     pattern.name = filename
     print("Segmenting stains")
     result = stain_segmentation(image, orginal)
-    cv2.drawContours(image, pattern.contours, -1, (255,0,255), 3)
+    cv2.drawContours(image, pattern.contours, -1, (255,0,255), 1)
     for stain in pattern.stains:
             stain.annotate(image)
     if not batch:
         result_preview(result)
+    cv2.imwrite(save_path + '-result.jpg', result)
     print("Analysing Stains")
     export_stain_data(save_path)
     print("\nCalculating Pattern Metrics")
     to_calculate= {'linearity': True, 
                  'convergence': True, 'distribution': True}
     pattern.export(save_path, to_calculate, batch)
-    cv2.imwrite(save_path + '-result.jpg', result)
     print("\nResults found in files beginning: " + save_path)
     print("Done :)")
 
@@ -88,18 +88,14 @@ def stain_segmentation(image, orginal):
     blur = cv2.GaussianBlur(image, (3,3), 0)
     gray = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
     gray_hsv = cv2.cvtColor(hsv_img, cv2.COLOR_BGR2GRAY)
+    
+    thresh = binarize_image(image, gray)
+    thresh = cv2.bitwise_not(thresh)
 
-    thresh = binarize_image(image, gray_hsv)
-    thresh2 = binarize_image(image, gray)
-    thresh2 = cv2.bitwise_not(thresh2)
     hist = cv2.calcHist( [gray_hsv], [0], None, [256], [0, 256] )
     remove_circle_markers(gray, thresh)
-    remove_circle_markers(gray, thresh2)
-    thresh = cv2.bitwise_and(thresh, thresh2)
     kernel = np.ones((3,3),np.uint8)
-
-    erosion = cv2.erode(thresh, kernel, iterations = 2)
-    thresh = cv2.dilate(erosion, kernel, iterations = 2)
+    cv2.imwrite('./flipped' + '-binary.jpg', thresh)
 
     im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) 
     pattern.contours = contours   
@@ -136,7 +132,7 @@ def analyseContours(contours, orginal, image, scale):
    # area = float('inf')
     count = 0
     for contour in contours:
-        if cv2.contourArea(contour) > 0:
+        if cv2.contourArea(contour) > 1:
             stain = bloodstain.Stain(count, contour, scale, orginal)
             pattern.add_stain(stain)
             count += 1
@@ -263,14 +259,14 @@ def line_count(x1, x_count):
 
 def binarize_image(img_original, gray) :
 
-    ret, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_TRIANGLE)
+    thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 99, 10)
     # thresh = cv2.bitwise_not(thresh)
     
     kernel = np.ones((3,3),np.uint8)
     erosion = cv2.erode(thresh, kernel, iterations = 2)
     dilation = cv2.dilate(erosion, kernel, iterations = 2)
 
-    return thresh
+    return dilation
 
 
 if __name__ == '__main__':
