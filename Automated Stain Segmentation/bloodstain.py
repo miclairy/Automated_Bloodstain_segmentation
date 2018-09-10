@@ -194,12 +194,12 @@ class Stain:
             return None
     
     def annotate(self, image, annotations={
-        'ellipse':True, 'id':False, 'directionality':False, 
+        'ellipse':True, 'id':True, 'directionality':False, 
         'center':False, 'gamma':False, 'direction_line': False}):
         font = cv2.FONT_HERSHEY_SIMPLEX
         text = ""
-        if len(self.c) > 0:
-           cv2.drawContours(image, [self.c], 0, (255,255,0), 1)
+        # if len(self.c) > 0:
+        #    cv2.drawContours(image, [self.c], 0, (255,255,0), 1)
         #    cv2.drawContours(image, [self.right_half], 0, (255,255,0), 3)
 
         if annotations['ellipse'] and self.ellipse:

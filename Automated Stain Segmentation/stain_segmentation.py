@@ -99,10 +99,10 @@ def stain_segmentation(image, orginal):
     cv2.imwrite('./flipped' + '-binary.jpg', thresh)
 
     im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) 
-    pattern.contours = contours   
+     
     # cv2.drawContours(image, contours, -1, (255,0,255), 3)
     
-    analyseContours(contours, orginal, image, pattern.scale)
+    analyseContours(contours, hierarchy, orginal, image, pattern.scale)
     
     # label_stains()
     
@@ -129,14 +129,19 @@ def label_stains():
     with open(mask_filename, 'w') as outfile:
         json.dump(stain.label())
 
-def analyseContours(contours, orginal, image, scale):
+def analyseContours(contours, hierarchy, orginal, image, scale):
    # area = float('inf')
     count = 0
-    for contour in contours:
-        if cv2.contourArea(contour) > 1:
-            stain = bloodstain.Stain(count, contour, scale, orginal)
-            pattern.add_stain(stain)
-            count += 1
+    outer_contours = []
+    for i in range(len(contours)):
+        contour = contours[i]
+        if hierarchy[0,i,3] == -1:
+            outer_contours.append(contour)
+            if cv2.contourArea(contour) > 1:
+                stain = bloodstain.Stain(count, contour, scale, orginal)
+                pattern.add_stain(stain)
+                count += 1
+    pattern.contours = outer_contours  
     print("Found {} stains".format(count))
 
 def export_stain_data(save_path, progressBar=False):
