@@ -78,11 +78,7 @@ def set_save_path(full_path, output_path):
     return save_path
 
 def stain_segmentation(image, orginal):
-   # t0 = time.time()
-    
-    # plt.hist(hsv_img.ravel(), 256, [0, 255])
-    # plt.xlim([0, 360])
-    # plt.show()]
+
     pattern.clear_data()
     hsv_img = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
@@ -98,15 +94,9 @@ def stain_segmentation(image, orginal):
     kernel = np.ones((3,3),np.uint8)
     cv2.imwrite('./flipped' + '-binary.jpg', thresh)
 
-    im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) 
-     
-    # cv2.drawContours(image, contours, -1, (255,0,255), 3)
-    
+    im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)     
     analyseContours(contours, hierarchy, orginal, image, pattern.scale)
     
-    # label_stains()
-    
-    # t1 = time.time()
     return image
 
 def crop_image(image):

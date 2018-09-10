@@ -80,8 +80,23 @@ class Stain:
                 contour = np.concatenate((self.contour[:start_tail], self.contour[end_tail:]))
             if len(contour) > 5:
                 # contour = self.contour
+                (x, y), (MA, ma), angle = cv2.fitEllipse(np.array(contour))
+                A = np.pi / 4 * MA * ma
+                if self.area / A > 0.3: 
                  
-                return cv2.fitEllipse(np.array(contour)), contour
+                    return cv2.fitEllipse(np.array(contour)), contour
+                else:
+                    return cv2.minAreaRect(np.array(contour)), contour
+            else:
+                (x, y), (MA, ma), angle = cv2.fitEllipse(np.array(self.contour))
+                A = np.pi / 4 * MA * ma
+                if self.area / A > 0.3: 
+                 
+                    return cv2.fitEllipse(np.array(self.contour)), contour
+                else:
+                    return cv2.minAreaRect(np.array(self.contour)), contour
+                
+                # return cv2.minAreaRect(np.array(contour)), contour
         return None, None
         
     def draw_ellipse(self, image):
