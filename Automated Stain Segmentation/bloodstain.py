@@ -11,9 +11,9 @@ class Stain:
         moment = cv2.moments(contour)
         self.original = original
         self.position = (int(moment['m10'] / moment['m00']), int(moment['m01'] / moment['m00'])) if moment['m00'] > 0 else (10,10)
-        self.ellipse = cv2.fitEllipse(self.contour) if len(self.contour) >= 5 else None
         self.area = cv2.contourArea(self.contour)
         self.area_mm = self.area * (1 / scale ** 2)
+        self.ellipse, self.c = self.fit_ellipse()
         self.major_axis = None
         if self.ellipse is not None:
             (self.x_ellipse, self.y_ellipse), (self.width, self.height), self.angle = self.ellipse
