@@ -25,17 +25,18 @@ def segment_images(path, out_path, scale, progressBar=None):
     percent = 0
     increment = (1 / len(os.listdir(path))) * 100
     for filename in progressbar.progressbar(os.listdir(path)):
-        if "jpg" in filename.lower() or "tif" in filename:
-            print("pancale:" ,progressBar.value())
-            f = path.strip() + filename.strip()
-            # change to python on if errors
-            # call(["python", "stain_segmentation.py", "-F", f , "-s", str(scale), "-o", out_path + filename.strip(), "-b", "True"]) 
-            args = {'filename': None, 'full_path': f, 'batch': True, 'scale': scale, 'output_path': out_path + filename.strip()}
-            stain_segmentation.CLI(args)
-            # downsample(path, filename)
-            if progressBar:
-                percent += increment
-                progressBar.setValue(percent)
+        out_name = filename + "-result.jpg"    
+        if out_name not in os.listdir(out_path):
+            if "jpg" in filename.lower() or "tif" in filename:
+                f = path.strip() + filename.strip()
+                # change to python on if errors
+                call(["python3", "stain_segmentation.py", "-F", f , "-s", str(scale), "-o", out_path + filename.strip(), "-b", "True"]) 
+                # args = {'filename': None, 'full_path': f, 'batch': True, 'scale': scale, 'output_path': out_path + filename.strip()}
+                # stain_segmentation.CLI(args)
+                # downsample(path, filename)
+                if progressBar:
+                    percent += increment
+                    progressBar.setValue(percent)
     if progressBar:
         progressBar.hide()
             
@@ -46,6 +47,12 @@ def downsample(path, filename):
     src = cv2.pyrDown(image, dstsize=(cols // 2, rows // 2))
     cv2.imwrite(path + filename, src)
 
+def crop(path, out_path):
+    for filename in progressbar.progressbar(os.listdir(path)):
+        if "jpg" in filename.lower() or "tif" in filename:
+            f = path.strip() + filename.strip()
+        call(["python3", "crop.py", "-F", f , "-o", out_path + filename.strip(), "-b", "True"]) 
+
 
 if __name__ == '__main__':
     path = get_folder()
@@ -53,3 +60,4 @@ if __name__ == '__main__':
     scale = 7 if not parse_batch_args()['scale'] else parse_batch_args()['scale']
     if path != None:
         segment_images(path, out_path, scale)
+        # crop(path, out_path)

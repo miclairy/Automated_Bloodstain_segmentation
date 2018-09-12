@@ -57,10 +57,10 @@ def CLI(args={}):
     cv2.imwrite(save_path + '-result.jpg', result)
     print("Analysing Stains")
     export_stain_data(save_path)
-    # export_obj(save_path, width, height)
+    export_obj(save_path, width, height)
     print("\nCalculating Pattern Metrics")
     to_calculate= {'linearity': True, 
-                 'convergence': True, 'distribution': True}
+                 'convergence': False, 'distribution': True}
     pattern.export(save_path, to_calculate, batch)
     print("\nResults found in files beginning: " + save_path)
     print("Done :)")
@@ -182,75 +182,6 @@ def remove_circle_markers(gray, img):
         circles = np.uint16(np.around(circles))
         for i in circles[0,:]:
             cv2.circle(img, (i[0],i[1]),i[2] + 10, (0,0,0), -2)
-
-def remove_rulers(image):
-    edges = cv2.Canny(image, 90, 100)
-    lines = cv2.HoughLinesP(edges, 1, np.pi/180, 100, minLineLength=0, maxLineGap=0)
-    y_top_count = {}
-    y_bottom_count = {}    
-    x_left_count = {}
-    x_right_count = {}
-    max_x_len = (None, 0)
-    h, w = image.shape 
-    
-    for line in lines:
-        x1,y1,x2,y2 = line[0]
-        max_x_len = (line, max(max_x_len[1], abs(x1 - x2))) if abs(x1 - x2) > max_x_len[1] else max_x_len
-        y_low = max(y1, y2)
-        if y_low < h / 2:
-            y_top_count = line_count(y_low, y_top_count)
-        else:
-            y_bottom_count = line_count(y_low, y_bottom_count)
-        if x1 < w / 2:
-            x_left_count = line_count(x1, x_left_count)
-        else:
-            x_right_count = line_count(x1, x_right_count)
-        if x2 < w / 2:
-            x_left_count = line_count(x2, x_left_count)
-        else:
-            x_right_count = line_count(x2, x_right_count)
-        
-    sort_top_y = sorted(y_top_count, key=y_top_count.get)
-    y = max(sort_top_y[-20:]) + 125
-    print(y)
-    
-    sort_left_x = sorted(x_left_count, key=x_left_count.get)
-    x = sort_left_x[-1] + 40
-    print(x)
-
-    sort_right_x = sorted(x_right_count, key=x_right_count.get)
-    w2 = min(sort_right_x[-4:]) - 2 * x 
-    print(w2)
-
-    sort_bottom_y = sorted(y_bottom_count, key=y_bottom_count.get)
-    h2 = min(sort_bottom_y[-4:]) - y - 40# remove_bottom(image[y:y+h, x:x+w2], y)
-    if h2 > 0:
-        h = h2
-
-    print(h)
-    crop_img = image[y:y+h, x:x+w2]
-   
-    # result_preview(crop_img)
-    return x, y, w2, h
-
-def remove_bottom(no_ruler_crop, y):
-    max_x_len = (None, 0)
-    edges = cv2.Canny(no_ruler_crop, 90, 100)
-    lines = cv2.HoughLinesP(edges, 1, np.pi/180, 100, minLineLength=0, maxLineGap=0)
-    for line in lines:
-        x1,y1,x2,y2 = line[0]
-        max_x_len = (line, max(max_x_len[1], abs(x1 - x2))) if abs(x1 - x2) > max_x_len[1] else max_x_len
-    x1,y1,x2,y2 = max_x_len[0][0]
-    return max(y1, y2) - y
-    kernel = np.ones((3,3),np.uint8)
-
-def line_count(x1, x_count):
-    if x1 in x_count:
-        x_count[x1] += 1
-    else:
-        x_count[x1] = 1
-    return x_count
-
 
 
 def binarize_image(img_original, gray) :
