@@ -10,6 +10,9 @@ import csv
 from parse_arguements import parse_args
 from pattern import Pattern
 import progressbar
+from scipy.stats import kde
+import matplotlib.patches as patches
+
 
 # path = '/home/cosc/student/cba62/blood-spatter-analysis/Neural Net/bloodstains/cast-off/' 
 #path = "./images/"
@@ -54,15 +57,15 @@ def CLI(args={}):
             stain.annotate(image)
     if not batch:
         result_preview(result)
-    cv2.imwrite(save_path + '-result.jpg', result)
-    print("Analysing Stains")
-    export_stain_data(save_path)
-    export_obj(save_path, width, height)
-    print("\nCalculating Pattern Metrics")
+    cv2.imwrite(save_path + '-small.jpg', result)
+    # print("Analysing Stains")
+    # export_stain_data(save_path)
+    # export_obj(save_path, width, height)
+    # print("\nCalculating Pattern Metrics")
     to_calculate= {'linearity': True, 
                  'convergence': False, 'distribution': True}
-    pattern.export(save_path, to_calculate, batch)
-    print("\nResults found in files beginning: " + save_path)
+    # pattern.export(save_path, to_calculate, batch)
+    # print("\nResults found in files beginning: " + save_path)
     print("Done :)")
 
 
@@ -73,7 +76,7 @@ def set_save_path(full_path, output_path):
     if full_path:
         save_path = os.path.splitext(full_path)[0]
     else:
-        save_path =  '/media/cba62/Elements/Result_data/' + args['filename']
+        save_path =  '/media/cba62/Elements/Result_data/' + full_path
     save_path = os.path.splitext(save_path)[0]
     return save_path
 
@@ -92,16 +95,70 @@ def stain_segmentation(image, orginal):
     hist = cv2.calcHist( [gray_hsv], [0], None, [256], [0, 256] )
     remove_circle_markers(gray, thresh)
     kernel = np.ones((3,3),np.uint8)
-    cv2.imwrite('./flipped' + '-binary.jpg', thresh)
 
     im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)     
     analyseContours(contours, hierarchy, orginal, image, pattern.scale)
+    return crop_highest_density(orginal)
     
-    return image
+    # return image
 
-def crop_image(image):
-    x, y, w, h = remove_rulers(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
-    return image[y:y+h, x:x+w]
+def crop_highest_density(image):
+    
+    x = []
+    y = []
+    for stain in pattern.stains:
+        x.append(stain.position[0])
+        y.append(stain.position[1])
+    nbins = 300
+    k = kde.gaussian_kde([x,y])
+    xi, yi = np.mgrid[min(x):max(x):nbins*1j, min(y):max(y):nbins*1j]
+    point_density = k(np.vstack([xi.flatten(), yi.flatten()]))
+    box_min_x, box_min_y, box_width, box_height  = calculate_box(point_density, xi, yi)
+    print(box_min_x, box_min_y, box_width, box_height)
+    box = patches.Rectangle((box_min_x, box_min_y), box_width, box_height, linewidth=1, edgecolor='black', facecolor='none')
+    # plot_density_heatmap(x, y, xi, yi, point_density, box)
+    height, width = image.shape[:2]
+    if int(box_min_y)+box_height > height:
+        box_min_y -= (int(box_min_y)+box_height - height)
+    if int(box_min_x)+box_width > width:
+        box_min_x -= (int(box_min_x)+box_width - width)
+    print(box_min_x, box_min_y, box_width, box_height)
+    return image[int(box_min_y):int(box_min_y)+box_height, int(box_min_x):int(box_min_x)+box_width]
+
+
+
+def plot_density_heatmap(x, y, xi, yi, point_density, box):
+    fig = plt.figure()
+    ax2 = fig.add_subplot(212)
+    im = ax2.pcolormesh(xi, yi, point_density.reshape(xi.shape))
+    ax2.add_patch(box)        
+    ax2.set_ylim(max(y), 0)
+    ax2.set_xlim(0, max(x))
+    ax2.set_title("Heat Map ")
+    ax2.set_xlabel("pixels")
+    ax2.set_ylabel("pixels")
+    cb = fig.colorbar(im, ax=ax2)
+    cb.set_label('mean number of STAINS')
+    plt.show()
+
+def calculate_box(point_density, xi, yi):
+    most_dense = np.unravel_index(np.argmax(point_density), point_density.shape) # index
+    densest = (xi.flatten()[most_dense], yi.flatten()[most_dense])
+
+    bound = point_density[most_dense] * 0.6
+    most_dense_points_x = xi.flatten()[np.where(point_density > bound)]
+    most_dense_points_y = yi.flatten()[np.where(point_density > bound)]
+    
+    box_min_x = max(densest[0] - 500, 0)
+    box_min_y = max(densest[1] - 500, 0) 
+    box_width = 1000
+    box_height = 1000
+    return box_min_x, box_min_y, box_width, box_height
+
+
+# def crop_image(image):
+#     x, y, w, h = remove_rulers(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
+#     return image[y:y+h, x:x+w]
 
 def label_stains():
 
@@ -127,11 +184,11 @@ def analyseContours(contours, hierarchy, orginal, image, scale):
         contour = contours[i]
         if hierarchy[0,i,3] == -1:
             outer_contours.append(contour)
-            if cv2.contourArea(contour) > 1:
+            if cv2.contourArea(contour) > 9:
                 stain = bloodstain.Stain(count, contour, scale, orginal)
                 pattern.add_stain(stain)
                 count += 1
-    pattern.contours = outer_contours  
+    # pattern.contours = outer_contours  
     print("Found {} stains".format(count))
 
 def export_stain_data(save_path, progressBar=False):

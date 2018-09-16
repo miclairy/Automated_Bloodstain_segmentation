@@ -25,18 +25,18 @@ def segment_images(path, out_path, scale, progressBar=None):
     percent = 0
     increment = (1 / len(os.listdir(path))) * 100
     for filename in progressbar.progressbar(os.listdir(path)):
-        out_name = filename + "-result.jpg"    
-        if out_name not in os.listdir(out_path):
-            if "jpg" in filename.lower() or "tif" in filename:
-                f = path.strip() + filename.strip()
-                # change to python on if errors
-                call(["python3", "stain_segmentation.py", "-F", f , "-s", str(scale), "-o", out_path + filename.strip(), "-b", "True"]) 
-                # args = {'filename': None, 'full_path': f, 'batch': True, 'scale': scale, 'output_path': out_path + filename.strip()}
-                # stain_segmentation.CLI(args)
-                # downsample(path, filename)
-                if progressBar:
-                    percent += increment
-                    progressBar.setValue(percent)
+        out_name = filename + "-small.jpg"    
+        # if out_name not in os.listdir(out_path):
+        if "jpg" in filename.lower() or "tif" in filename:
+            f = path.strip() + filename.strip()
+            # change to python on if errors
+            call(["python3", "stain_segmentation.py", "-F", f , "-s", str(scale), "-o", out_path + filename.strip(), "-b", "True"]) 
+            # args = {'filename': None, 'full_path': f, 'batch': True, 'scale': scale, 'output_path': out_path + filename.strip()}
+            # stain_segmentation.CLI(args)
+            # downsample(path, filename)
+            if progressBar:
+                percent += increment
+                progressBar.setValue(percent)
     if progressBar:
         progressBar.hide()
             
