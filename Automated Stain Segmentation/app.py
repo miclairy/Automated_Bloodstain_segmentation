@@ -11,6 +11,7 @@ from PIL import Image
 import os
 import progressbar
 import batch_process
+import time
 
 class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
     def __init__(self, parent=None):
@@ -89,7 +90,9 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
             self.pattern_metrics = {'linearity': self.dialog.linearity_check.isChecked(),
                                     'convergence': self.dialog.convergence_check.isChecked(),
                                     'distribution': self.dialog.distribution_check.isChecked()}
+            a = time.time()
             self.result = Seg.stain_segmentation(image, orginal)
+            print('segment time', time.time() - a)
             result = self.result.copy()
             # cv2.cvtColor(image, cv2.COLOR_BGR2RGB, image)
             Seg.pattern.image = result
@@ -126,7 +129,7 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
             percent = (j / len(Seg.pattern.stains)) * 50
             self.progressBar.setValue(percent)
             stain_data = stain.get_summary_data()            
-            for i in range(1,13):
+            for i in range(1,12):
                 if stain_data[i] != None:
                     self.tableWidget.setItem(j,i-1, QtGui.QTableWidgetItem(str(stain_data[i])))
             j += 1

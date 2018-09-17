@@ -77,7 +77,6 @@ class Stain:
                     else:
                         return cv2.minAreaRect(np.array(contour)), contour
             else:
-                print(self.id, "No tail")
                 (x, y), (MA, ma), angle = cv2.fitEllipse(np.array(self.contour))
                 A = np.pi / 4 * MA * ma
                 if A > 0 and self.area / A > 0.3: 
@@ -153,8 +152,8 @@ class Stain:
         direction = self.direction()
 
         if self.angle:
-            pty = np.cos(np.deg2rad(self.angle)) * 1000000
-            ptx = np.sin(np.deg2rad(self.angle)) * 1000000
+            pty = np.cos(np.deg2rad(self.angle)) * self.original.shape[1]
+            ptx = np.sin(np.deg2rad(self.angle)) * self.original.shape[0]
             x0 = int(x + ptx)
             x1 = int(x - ptx)
             y0 = int(y - pty)

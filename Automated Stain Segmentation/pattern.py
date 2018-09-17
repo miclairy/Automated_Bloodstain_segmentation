@@ -7,6 +7,8 @@ import cv2
 import os
 import csv
 import progressbar
+import time
+
 
 class Pattern:
 
@@ -60,13 +62,21 @@ class Pattern:
 
         self.plot_intersection_scatter(ax1, x, y)
         nbins = 300
+        a = time.time()
         k = kde.gaussian_kde([x,y])
         xi, yi = np.mgrid[min(x):max(x):nbins*1j, min(y):max(y):nbins*1j]
-        point_density = k(np.vstack([xi.flatten(), yi.flatten()]))
+        # point_density = k(np.vstack([xi.flatten(), yi.flatten()]))
+        a = time.time()
+        point_density = [xi.reshape(-1), yi.reshape(-1)] 
+        point_density = k(point_density)
+        print('time', a - time.time())
+
+        print('density')
         box, convergence_point = self.calculate_convergence_box(point_density, xi, yi)
         self.plot_density_heatmap(ax2, x, y, xi, yi, point_density, box, fig)
         plt.tight_layout()
         
+        print(time.time() - a, len(x_values))
         # plt.show()
         return box, convergence_point
 
@@ -188,16 +198,22 @@ class Pattern:
         poly, r_squared,  ratio_stain_number, ratio_stain_area, str_convergence, str_box = [""]*6
         bar.update(0)
         if to_calculate['linearity']:
+            a = time.time()
             poly, r_squared = self.linearity()
             r_squared = "{:.4f}".format(r_squared)
+            print('linearity took', time.time() - a)
         bar.update(1)
         if to_calculate['distribution']:
+            a = time.time()
             ratio_stain_number, ratio_stain_area = self.distribution()
             ratio_stain_area = "{:.3e}".format(ratio_stain_area)
             ratio_stain_number = "{:.3e}".format(ratio_stain_number)
+            print('distribution took', time.time() - a)
         bar.update(2)
         if to_calculate['convergence']:
+            a = time.time()
             box, convergence_point = self.convergence()
+            print('took', time.time() - a)
             str_box = "lower left (x,y) : ({:.1f},{:.1f}) Width : {:.1f} Height : {:.1f}".format(
                 box.get_x(), box.get_y(), box.get_width(), box.get_height())
             str_convergence = "({:.1f}, {:.1f})".format(*convergence_point)
@@ -218,7 +234,9 @@ class Pattern:
 
     def export(self, save_path, metrics, batch=False):
         file_name = os.path.splitext(save_path)[0]
+        a = time.time()
         data = self.get_summary_data(metrics, batch)
+        print("pattern total", time.time() - a)
         with open(file_name + '_pattern.csv', 'w', newline='') as csvfile:
             data_writer = csv.writer(csvfile, delimiter=',',
                                     quotechar='"', quoting=csv.QUOTE_MINIMAL)
