@@ -99,9 +99,9 @@ def stain_segmentation(image, orginal):
     
     return image
 
-def crop_image(image):
-    x, y, w, h = remove_rulers(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
-    return image[y:y+h, x:x+w]
+# def crop_image(image):
+#     x, y, w, h = remove_rulers(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
+#     return image[y:y+h, x:x+w]
 
 def label_stains():
 
@@ -127,7 +127,7 @@ def analyseContours(contours, hierarchy, orginal, image, scale):
         contour = contours[i]
         if hierarchy[0,i,3] == -1:
             outer_contours.append(contour)
-            if cv2.contourArea(contour) > 1:
+            if cv2.contourArea(contour) > 3:
                 stain = bloodstain.Stain(count, contour, scale, orginal)
                 pattern.add_stain(stain)
                 count += 1

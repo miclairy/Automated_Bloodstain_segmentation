@@ -46,58 +46,47 @@ class Stain:
 
             end_tail = None
             start_tail = None
-            i = extreme_i
-            k = extreme_i
-            _, _ , max_width, height = cv2.boundingRect(self.contour)
+            i = (extreme_i + 1) % len(self.contour)
+            k = (extreme_i - 1) % len(self.contour)
+            (_, _) , (max_width, height), angle = cv2.minAreaRect(self.contour)
+
             small_width = True
 
             while i < len(self.contour) and k > 0 and small_width:
                 pt_1 = self.contour[i][0]
                 pt_2 = self.contour[k][0]
                 dist = ((pt_1[0] - pt_2[0]) ** 2 + (pt_1[1] - pt_2[1]) ** 2) ** 0.5
-                if (dist / max_width) > 0.3:
+                if (dist / min(max_width, height)) > 0.5 :#and (tuple(pt_1) in concave_pts or tuple(pt_2) in concave_pts):
                     small_width = False
                     end_tail = i
                     start_tail = k
                 i += 1
                 k -= 1
-            
-
-            # for i in range(extreme_i, len(self.contour)):
-            #     pt = self.contour[i][0]
-            #     if tuple(pt) in concave_pts:
-            #         end_tail = i
-            #         break
-            
-            # i = 0
-            # for i in range(extreme_i, 0, -1):
-            #     pt = self.contour[i][0]
-            #     if tuple(pt) in concave_pts:
-            #         start_tail = i
-            #         break
 
             if end_tail and start_tail:
-                contour = np.concatenate((self.contour[:start_tail], self.contour[end_tail:]))
-            if len(contour) > 5:
-                # contour = self.contour
-                (x, y), (MA, ma), angle = cv2.fitEllipse(np.array(contour))
-                A = np.pi / 4 * MA * ma
-                if A > 0 and self.area / A > 0.3: 
-                 
-                    return cv2.fitEllipse(np.array(contour)), contour
+                if start_tail <= end_tail:
+                    contour = np.concatenate((self.contour[:start_tail + 1], self.contour[end_tail:]))
                 else:
-                    return cv2.minAreaRect(np.array(contour)), contour
+                    contour = self.contour[end_tail: start_tail + 1]
+                if len(contour) > 5:
+                    (x, y), (MA, ma), angle = cv2.fitEllipse(np.array(contour))
+                    A = np.pi / 4 * MA * ma
+                    if A > 0 and self.area / A > 0.3: 
+                    
+                        return cv2.fitEllipse(np.array(contour)), contour
+                    else:
+                        return cv2.minAreaRect(np.array(contour)), contour
             else:
+                print(self.id, "No tail")
                 (x, y), (MA, ma), angle = cv2.fitEllipse(np.array(self.contour))
                 A = np.pi / 4 * MA * ma
                 if A > 0 and self.area / A > 0.3: 
                  
-                    return cv2.fitEllipse(np.array(self.contour)), contour
+                    return cv2.fitEllipse(np.array(self.contour)), []
                 else:
-                    return cv2.minAreaRect(np.array(self.contour)), contour
+                    return cv2.minAreaRect(np.array(self.contour)), []
                 
-                # return cv2.minAreaRect(np.array(contour)), contour
-        return None, None
+        return None, []
         
     def draw_ellipse(self, image):
 
@@ -213,8 +202,8 @@ class Stain:
         'center':False, 'gamma':False, 'direction_line': False}):
         font = cv2.FONT_HERSHEY_SIMPLEX
         text = ""
-        # if len(self.c) > 0:
-        #    cv2.drawContours(image, [self.c], 0, (255,255,0), 1)
+        if len(self.c) > 0:
+           cv2.drawContours(image, [self.c], 0, (255,255,0), 1)
         #    cv2.drawContours(image, [self.right_half], 0, (255,255,0), 3)
 
         if annotations['ellipse'] and self.ellipse:
