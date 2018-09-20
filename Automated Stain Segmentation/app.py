@@ -117,7 +117,7 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
         self.progressBar.hide()
 
     def populate_stain_table(self):
-        self.tableWidget.setColumnCount(13)
+        self.tableWidget.setColumnCount(12)
         self.tableWidget.setRowCount(len(Seg.pattern.stains))
         self.tableWidget.itemClicked.connect(self.show_stain)
         headers = "position x;position y;area px;area_mm;width ellipse;height ellipse;angle;gamma;direction;solidity;circularity;intensity"
@@ -129,7 +129,7 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
             percent = (j / len(Seg.pattern.stains)) * 50
             self.progressBar.setValue(percent)
             stain_data = stain.get_summary_data()            
-            for i in range(1,12):
+            for i in range(1,13):
                 if stain_data[i] != None:
                     self.tableWidget.setItem(j,i-1, QtGui.QTableWidgetItem(str(stain_data[i])))
             j += 1

@@ -94,7 +94,7 @@ class Stain:
 
     def circularity(self):
         if self.ellipse:
-            return self.width / self.height
+            return min(self.width, self.height) / max(self.width, self.height)
         else:
             return float('inf')
 
@@ -197,7 +197,7 @@ class Stain:
             return None
     
     def annotate(self, image, annotations={
-        'ellipse':True, 'id':True, 'directionality':False, 
+        'ellipse':True, 'id':False, 'directionality':False, 
         'center':False, 'gamma':False, 'direction_line': False}):
         font = cv2.FONT_HERSHEY_SIMPLEX
         text = ""

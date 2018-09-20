@@ -49,36 +49,39 @@ class Pattern:
 
     def plot_convergence(self, intersects):
 
-        x_values = [x[0] for x in intersects]
-        y_values = [x[1] for x in intersects]
-        fig = plt.figure()
-        fig.canvas.set_window_title('Convergence ' + self.name)
-        self.plots['convergence'] = fig
-        ax1 = fig.add_subplot(211)
-        ax2 = fig.add_subplot(212)
+        if len(intersects):
+            x_values = [x[0] for x in intersects]
+            y_values = [x[1] for x in intersects]
+            fig = plt.figure()
+            fig.canvas.set_window_title('Convergence ' + self.name)
+            self.plots['convergence'] = fig
+            ax1 = fig.add_subplot(211)
+            ax2 = fig.add_subplot(212)
 
-        x = x_values
-        y = y_values
+            x = x_values
+            y = y_values
 
-        self.plot_intersection_scatter(ax1, x, y)
-        nbins = 300
-        a = time.time()
-        k = kde.gaussian_kde([x,y])
-        xi, yi = np.mgrid[min(x):max(x):nbins*1j, min(y):max(y):nbins*1j]
-        # point_density = k(np.vstack([xi.flatten(), yi.flatten()]))
-        a = time.time()
-        point_density = [xi.reshape(-1), yi.reshape(-1)] 
-        point_density = k(point_density)
-        print('time', a - time.time())
+            self.plot_intersection_scatter(ax1, x, y)
+            nbins = 300
+            a = time.time()
+            k = kde.gaussian_kde([x,y])
+            xi, yi = np.mgrid[min(x):max(x):nbins*1j, min(y):max(y):nbins*1j]
+            # point_density = k(np.vstack([xi.flatten(), yi.flatten()]))
+            a = time.time()
+            point_density = [xi.reshape(-1), yi.reshape(-1)] 
+            point_density = k(point_density)
+            print('time', a - time.time())
 
-        print('density')
-        box, convergence_point = self.calculate_convergence_box(point_density, xi, yi)
-        self.plot_density_heatmap(ax2, x, y, xi, yi, point_density, box, fig)
-        plt.tight_layout()
-        
-        print(time.time() - a, len(x_values))
-        # plt.show()
-        return box, convergence_point
+            print('density')
+            box, convergence_point = self.calculate_convergence_box(point_density, xi, yi)
+            self.plot_density_heatmap(ax2, x, y, xi, yi, point_density, box, fig)
+            plt.tight_layout()
+            
+            print(time.time() - a, len(x_values))
+            # plt.show()
+            return box, convergence_point
+        else:
+            return None, None
 
     def plot_intersection_scatter(self, ax1, x, y):
         height, width = self.image.shape[:2]
@@ -213,10 +216,15 @@ class Pattern:
         if to_calculate['convergence']:
             a = time.time()
             box, convergence_point = self.convergence()
-            print('took', time.time() - a)
-            str_box = "lower left (x,y) : ({:.1f},{:.1f}) Width : {:.1f} Height : {:.1f}".format(
-                box.get_x(), box.get_y(), box.get_width(), box.get_height())
-            str_convergence = "({:.1f}, {:.1f})".format(*convergence_point)
+            if convergence_point == None:
+                print('took', time.time() - a)
+                str_box = "None"
+                str_convergence = "None"
+            else:
+                print('took', time.time() - a)
+                str_box = "lower left (x,y) : ({:.1f},{:.1f}) Width : {:.1f} Height : {:.1f}".format(
+                    box.get_x(), box.get_y(), box.get_width(), box.get_height())
+                str_convergence = "({:.1f}, {:.1f})".format(*convergence_point)
 
         bar.update(3)
         if not batch:

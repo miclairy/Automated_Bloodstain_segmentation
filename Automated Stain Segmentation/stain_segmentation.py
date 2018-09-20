@@ -28,6 +28,7 @@ def CLI(args={}):
     if not filename:
         print("No file selected")
         return 
+    a = time.time()
     print("\nProcessing: " + filename)
     
     save_path = set_save_path(filename, args['output_path'])
@@ -49,6 +50,7 @@ def CLI(args={}):
     pattern.name = filename
     print("Segmenting stains")
     result = stain_segmentation(image, orginal)
+    print("inital", a - time.time())
     cv2.drawContours(image, pattern.contours, -1, (255,0,255), 1)
     for stain in pattern.stains:
             stain.annotate(image)
@@ -62,6 +64,7 @@ def CLI(args={}):
     to_calculate= {'linearity': True, 
                  'convergence': False, 'distribution': True}
     pattern.export(save_path, to_calculate, batch)
+    print('total', a - time.time())
     print("\nResults found in files beginning: " + save_path)
     print("Done :)")
 
@@ -73,7 +76,7 @@ def set_save_path(full_path, output_path):
     if full_path:
         save_path = os.path.splitext(full_path)[0]
     else:
-        save_path =  '/media/cba62/Elements/Result_data/' + args['filename']
+        save_path =  '/media/cba62/Elements/Result_data/' + full_path
     save_path = os.path.splitext(save_path)[0]
     return save_path
 
@@ -87,7 +90,7 @@ def stain_segmentation(image, orginal):
     gray_hsv = cv2.cvtColor(hsv_img, cv2.COLOR_BGR2GRAY)
     
     thresh = binarize_image(image, gray)
-    thresh = cv2.bitwise_not(thresh)
+    # cv2.imwrite('./binary.jpg', thresh)
 
     hist = cv2.calcHist( [gray_hsv], [0], None, [256], [0, 256] )
     remove_circle_markers(gray, thresh)
@@ -127,7 +130,7 @@ def analyseContours(contours, hierarchy, orginal, image, scale):
         contour = contours[i]
         if hierarchy[0,i,3] == -1:
             outer_contours.append(contour)
-            if cv2.contourArea(contour) > 3:
+            if cv2.contourArea(contour) > 5:
                 stain = bloodstain.Stain(count, contour, scale, orginal)
                 pattern.add_stain(stain)
                 count += 1
@@ -193,7 +196,7 @@ def binarize_image(img_original, gray) :
     erosion = cv2.erode(thresh, kernel, iterations = 2)
     dilation = cv2.dilate(erosion, kernel, iterations = 2)
 
-    return dilation
+    return cv2.bitwise_not(dilation)
 
 
 if __name__ == '__main__':
