@@ -1,6 +1,6 @@
 # Automated Bloodstain Segmentation
 
-This is a tool kiey of Bloodstain Spatter Pattern analysis.
+This is a tool kit for Automatic Bloodstain Spatter Pattern analysis.
 
 It provides automatic dectection and segmentation of stains then various stain and pattern metrics are computed.
 
@@ -28,3 +28,6 @@ Analyse a folder of images
 
 see --help for details
   
+#### Contact
+
+For more information see the report attached to this repo or email me at clairelouisebarnaby@gmail.com
