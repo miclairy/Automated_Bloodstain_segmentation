@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 import sys
 import os
-import time
 from matplotlib import pyplot as plt
 import bloodstain
 import json
@@ -11,15 +10,13 @@ from parse_arguements import parse_args
 from pattern import Pattern
 import progressbar
 
-# path = '/home/cosc/student/cba62/blood-spatter-analysis/Neural Net/bloodstains/cast-off/' 
-#path = "./images/"
+
 path = '/media/cba62/Elements/Cropped Data/'
 save_path = '/media/cba62/Elements/Result_data/'
 pattern = Pattern()
 
 def CLI(args={}):
     args = parse_args() if not args else args
-    print(args)
     filename = None if not args['filename'] else path + args['filename']
     full_path = args['full_path']
     if full_path:
@@ -28,7 +25,6 @@ def CLI(args={}):
     if not filename:
         print("No file selected")
         return 
-    a = time.time()
     print("\nProcessing: " + filename)
     
     save_path = set_save_path(filename, args['output_path'])
@@ -50,7 +46,6 @@ def CLI(args={}):
     pattern.name = filename
     print("Segmenting stains")
     result = stain_segmentation(image, orginal)
-    print("inital", a - time.time())
     cv2.drawContours(image, pattern.contours, -1, (255,0,255), 1)
     for stain in pattern.stains:
             stain.annotate(image)
@@ -62,9 +57,8 @@ def CLI(args={}):
     export_obj(save_path, width, height)
     print("\nCalculating Pattern Metrics")
     to_calculate= {'linearity': True, 
-                 'convergence': False, 'distribution': True}
+                 'convergence': True, 'distribution': True}
     pattern.export(save_path, to_calculate, batch)
-    print('total', a - time.time())
     print("\nResults found in files beginning: " + save_path)
     print("Done :)")
 
@@ -81,7 +75,6 @@ def set_save_path(full_path, output_path):
     return save_path
 
 def stain_segmentation(image, orginal):
-
     pattern.clear_data()
     hsv_img = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
@@ -90,7 +83,7 @@ def stain_segmentation(image, orginal):
     gray_hsv = cv2.cvtColor(hsv_img, cv2.COLOR_BGR2GRAY)
     
     thresh = binarize_image(image, gray)
-    # cv2.imwrite('./binary.jpg', thresh)
+    # cv2.imwrite('./binary.jpg', thresh) # uncomment to export a binary image
 
     hist = cv2.calcHist( [gray_hsv], [0], None, [256], [0, 256] )
     remove_circle_markers(gray, thresh)
@@ -102,28 +95,7 @@ def stain_segmentation(image, orginal):
     
     return image
 
-# def crop_image(image):
-#     x, y, w, h = remove_rulers(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
-#     return image[y:y+h, x:x+w]
-
-def label_stains():
-
-    labels = {"shapes" : [], "lineColor": [0, 255, 0, 128],
-    "imagePath": sys.argv[1],
-    "flags": {},
-    "imageData" : None,
-    "fillColor": [255, 0, 0,128]}
-    i = 0
-    for stain in pattern.stains:
-        labels["shapes"].append(stain.label(" " + str(i)))
-        i = i + 1
-
-    mask_filename = path + os.path.splitext(sys.argv[1])[0] + '.json'
-    with open(mask_filename, 'w') as outfile:
-        json.dump(stain.label())
-
 def analyseContours(contours, hierarchy, orginal, image, scale):
-   # area = float('inf')
     count = 0
     outer_contours = []
     for i in range(len(contours)):
@@ -137,8 +109,7 @@ def analyseContours(contours, hierarchy, orginal, image, scale):
     pattern.contours = outer_contours  
     print("Found {} stains".format(count))
 
-def export_stain_data(save_path, progressBar=False):
-    
+def export_stain_data(save_path, progressBar=False):    
     with open(save_path + '_data.csv', 'w', newline='') as csvfile:
         data_writer = csv.writer(csvfile, delimiter=',',
                                 quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -155,11 +126,9 @@ def export_stain_data(save_path, progressBar=False):
                     i += (1 / len(pattern.stains)) * 50
                     progressBar.setValue(i)
 
-
 def export_obj(save_path, width, height):
-    # save_path = "E:\\PointNet_Data\\" + save_path.split("Cropped Data\\")[1]
     file_name = os.path.splitext(save_path)[0]
-    print(file_name)
+    print("save path:", file_name)
     with open(file_name + '_points.pts', 'w', newline='') as f:
         for stain in pattern.stains:
             f.write(stain.obj_format(width, height) )
@@ -167,9 +136,6 @@ def export_obj(save_path, width, height):
 def result_preview(img_original) :
     print("Press 'q' to close preview")
     while True:
-        # plt.hist(hsv_img.ravel(), 256, [0, 255])
-        # plt.xlim([0, 360])
-        # plt.show()
         small = cv2.resize(img_original, (0,0), fx=0.25, fy=0.25)
         cv2.imshow('Blood Spatter', small)
 
@@ -188,16 +154,37 @@ def remove_circle_markers(gray, img):
 
 
 def binarize_image(img_original, gray) :
-
     thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 99, 10)
-    # thresh = cv2.bitwise_not(thresh)
-    
     kernel = np.ones((3,3),np.uint8)
     erosion = cv2.erode(thresh, kernel, iterations = 2)
     dilation = cv2.dilate(erosion, kernel, iterations = 2)
 
     return cv2.bitwise_not(dilation)
 
+def label_stains():
+    ''' Not used for research purposes to export json in readable format 
+    for instance segmenation labelling tool 'label me' '''
+
+    labels = {"shapes" : [], "lineColor": [0, 255, 0, 128],
+    "imagePath": sys.argv[1],
+    "flags": {},
+    "imageData" : None,
+    "fillColor": [255, 0, 0,128]}
+    i = 0
+    for stain in pattern.stains:
+        labels["shapes"].append(stain.label(" " + str(i)))
+        i = i + 1
+
+    mask_filename = path + os.path.splitext(sys.argv[1])[0] + '.json'
+    with open(mask_filename, 'w') as outfile:
+        json.dump(stain.label())
+
+def show_intentsity_histogram(img):
+    ''' Not used for research purposes'''
+
+    plt.hist(img.ravel(), 256, [0, 255])
+    plt.xlim([0, 360])
+    plt.show()
 
 if __name__ == '__main__':
     CLI()

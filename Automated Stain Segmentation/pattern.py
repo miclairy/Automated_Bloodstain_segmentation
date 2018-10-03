@@ -48,44 +48,32 @@ class Pattern:
         return self.plot_convergence(intersects)
 
     def plot_convergence(self, intersects):
-
         if len(intersects):
-            x_values = [x[0] for x in intersects]
-            y_values = [x[1] for x in intersects]
+            x = [i[0] for i in intersects]
+            y = [j[1] for j in intersects]
             fig = plt.figure()
             fig.canvas.set_window_title('Convergence ' + self.name)
             self.plots['convergence'] = fig
             ax1 = fig.add_subplot(211)
             ax2 = fig.add_subplot(212)
 
-            x = x_values
-            y = y_values
-
             self.plot_intersection_scatter(ax1, x, y)
-            nbins = 300
-            a = time.time()
+            nbins = 25
             k = kde.gaussian_kde([x,y])
             xi, yi = np.mgrid[min(x):max(x):nbins*1j, min(y):max(y):nbins*1j]
-            # point_density = k(np.vstack([xi.flatten(), yi.flatten()]))
-            a = time.time()
-            point_density = [xi.reshape(-1), yi.reshape(-1)] 
-            point_density = k(point_density)
-            print('time', a - time.time())
+            point_density = k([xi.reshape(-1), yi.reshape(-1)])
 
-            print('density')
             box, convergence_point = self.calculate_convergence_box(point_density, xi, yi)
             self.plot_density_heatmap(ax2, x, y, xi, yi, point_density, box, fig)
             plt.tight_layout()
             
-            print(time.time() - a, len(x_values))
-            # plt.show()
             return box, convergence_point
         else:
             return None, None
 
     def plot_intersection_scatter(self, ax1, x, y):
         height, width = self.image.shape[:2]
-        ax1.plot(x, y, '*', markersize=3, color='g')
+        ax1.plot(x, y, '*', markersize=0.5, color='g')
         ax1.imshow(cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB), extent=[0, width, height, 0], aspect='auto') 
         ax1.set_xlim(0, max(x))
         ax1.set_ylim(max(y), 0)
@@ -94,7 +82,7 @@ class Pattern:
         ax1.set_ylabel("pixels")
 
     def plot_density_heatmap(self, ax2, x, y, xi, yi, point_density, box, fig):
-        im = ax2.pcolormesh(xi, yi, point_density.reshape(xi.shape))
+        im = ax2.pcolormesh(xi, yi, point_density.reshape(xi.shape), cmap='jet')
         ax2.add_patch(box)        
         ax2.set_ylim(max(y), 0)
         ax2.set_xlim(0, max(x))
@@ -158,7 +146,6 @@ class Pattern:
         plt.xlabel("pixels")
         plt.ylabel("pixels")
         plt.title("Stain Centers fitted to a degree 2 polynomial")
-        # plt.show()
         
         str_poly = str(poly).split('\n')[1]
         squared_term = str_poly.find('x') + 1
@@ -193,35 +180,33 @@ class Pattern:
         ratio_stain_number = stain_number / hull.volume
         ratio_stain_area = stains_area / hull.volume
         
-        # plt.show()
         return ratio_stain_number, ratio_stain_area
 
     def calculate_summary_data(self, to_calculate, batch=False):
         bar = progressbar.ProgressBar(max_value=3)
         poly, r_squared,  ratio_stain_number, ratio_stain_area, str_convergence, str_box = [""]*6
         bar.update(0)
+        
         if to_calculate['linearity']:
             a = time.time()
             poly, r_squared = self.linearity()
             r_squared = "{:.4f}".format(r_squared)
-            print('linearity took', time.time() - a)
         bar.update(1)
+        
         if to_calculate['distribution']:
             a = time.time()
             ratio_stain_number, ratio_stain_area = self.distribution()
             ratio_stain_area = "{:.3e}".format(ratio_stain_area)
             ratio_stain_number = "{:.3e}".format(ratio_stain_number)
-            print('distribution took', time.time() - a)
         bar.update(2)
+
         if to_calculate['convergence']:
             a = time.time()
             box, convergence_point = self.convergence()
             if convergence_point == None:
-                print('took', time.time() - a)
                 str_box = "None"
                 str_convergence = "None"
             else:
-                print('took', time.time() - a)
                 str_box = "lower left (x,y) : ({:.1f},{:.1f}) Width : {:.1f} Height : {:.1f}".format(
                     box.get_x(), box.get_y(), box.get_width(), box.get_height())
                 str_convergence = "({:.1f}, {:.1f})".format(*convergence_point)
@@ -244,7 +229,6 @@ class Pattern:
         file_name = os.path.splitext(save_path)[0]
         a = time.time()
         data = self.get_summary_data(metrics, batch)
-        print("pattern total", time.time() - a)
         with open(file_name + '_pattern.csv', 'w', newline='') as csvfile:
             data_writer = csv.writer(csvfile, delimiter=',',
                                     quotechar='"', quoting=csv.QUOTE_MINIMAL)

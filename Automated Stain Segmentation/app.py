@@ -94,7 +94,6 @@ class BPA_App(QtGui.QMainWindow, main_window.Ui_MainWindow):
             self.result = Seg.stain_segmentation(image, orginal)
             print('segment time', time.time() - a)
             result = self.result.copy()
-            # cv2.cvtColor(image, cv2.COLOR_BGR2RGB, image)
             Seg.pattern.image = result
             Seg.pattern.name = self.file_name
             self.set_image()

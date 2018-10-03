@@ -5,7 +5,7 @@ import csv
 
 class Stain:
 
-    def __init__(self, id, contour, scale, original): # scale in px per mm
+    def __init__(self, id, contour, scale, original): 
         self.contour = contour
         self.id = id
         moment = cv2.moments(contour)
@@ -56,7 +56,7 @@ class Stain:
                 pt_1 = self.contour[i][0]
                 pt_2 = self.contour[k][0]
                 dist = ((pt_1[0] - pt_2[0]) ** 2 + (pt_1[1] - pt_2[1]) ** 2) ** 0.5
-                if (dist / min(max_width, height)) > 0.5 :#and (tuple(pt_1) in concave_pts or tuple(pt_2) in concave_pts):
+                if (dist / min(max_width, height)) > 0.5 :
                     small_width = False
                     end_tail = i
                     start_tail = k
@@ -168,7 +168,6 @@ class Stain:
                     y_use = max(y0, y1)
                 else:
                     y_use = min(y0, y1)
-                # print(x, y)
                 return sorted([(x, y), (int(x_use), int(y_use))], key=lambda x : x[0]) 
             return sorted([(int(x0), int(y0)), (int(x1), int(y1))], key=lambda x : x[0]) 
 
@@ -201,9 +200,6 @@ class Stain:
         'center':False, 'gamma':False, 'direction_line': False}):
         font = cv2.FONT_HERSHEY_SIMPLEX
         text = ""
-        if len(self.c) > 0:
-           cv2.drawContours(image, [self.c], 0, (255,255,0), 1)
-        #    cv2.drawContours(image, [self.right_half], 0, (255,255,0), 3)
 
         if annotations['ellipse'] and self.ellipse:
             self.draw_ellipse(image)

@@ -5,8 +5,12 @@ from parse_arguements import parse_args
 
 
 def remove_rulers(image):
-    '''finds lines in image, counts the number in each side of image by splitting in in half for left right then half horizontally for top bottom
-    then it assumes that the lowest and highest are rulars then adds offsets and crops ??'''
+    ''' Only works for images with clear straight rulers on all sides and qwenda's images
+        1. Finds lines in image 
+        3. For each line it decides it is is in the left or right then if it is in the top or bottom
+        2. Counts the number of lines starting at the same place in the image
+        3. For each side it takes the location of the maximum number of lines and adds an offset and then crops there '''
+
     blur = cv2.GaussianBlur(image, (3,3), 0)
     grey = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
     edges = cv2.Canny(grey, 90, 100)
@@ -49,7 +53,8 @@ def remove_rulers(image):
     print(w2)
 
     sort_bottom_y = sorted(y_bottom_count, key=y_bottom_count.get)
-    h2 = min(sort_bottom_y[-4:]) - y - 15# remove_bottom(image[y:y+h, x:x+w2], y)
+    h2 = min(sort_bottom_y[-4:]) - y - 15
+    # h2 = remove_bottom(image[y:y+h, x:x+w2], y) # uncomment for qwendas images
     if h2 > 0:
         h = h2
 
@@ -59,6 +64,7 @@ def remove_rulers(image):
     return crop_img
 
 def line_count(x1, x_count):
+    ''' counts number of lines that start at the same point '''
     if x1 in x_count:
         x_count[x1] += 1
     else:
@@ -68,6 +74,7 @@ def line_count(x1, x_count):
 
 
 def remove_bottom(no_ruler_crop, y):
+    ''' Used to remove bottom of Gwenda's cast off images '''
     max_x_len = (None, 0)
     edges = cv2.Canny(no_ruler_crop, 90, 100)
     lines = cv2.HoughLinesP(edges, 1, np.pi/180, 100, minLineLength=0, maxLineGap=0)

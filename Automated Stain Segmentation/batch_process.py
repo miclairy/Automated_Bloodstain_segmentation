@@ -7,9 +7,7 @@ from parse_arguements import parse_batch_args
 import progressbar
 
 def get_folder(): 
-    # path = '/home/cosc/student/cba62/blood-spatter-analysis/Neural Net/test/downsampled/'
-    # path = '/home/cosc/student/cba62/blood-spatter-analysis/image processing v1/images/'
-    path = '/media/cba62/Elements/Cropped Data/'
+    path = '/media/cba62/Elements/Cropped Data/' # default file path used when -f is used
     
     path = None if not parse_batch_args()['folder'] else path + parse_batch_args()['folder']
     full_path = parse_batch_args()['full_path']
@@ -29,11 +27,8 @@ def segment_images(path, out_path, scale, progressBar=None):
         if out_name not in os.listdir(out_path):
             if "jpg" in filename.lower() or "tif" in filename:
                 f = path.strip() + filename.strip()
-                # change to python on if errors
+                # change to python if python3 is default
                 call(["python3", "stain_segmentation.py", "-F", f , "-s", str(scale), "-o", out_path + filename.strip(), "-b", "True"]) 
-                # args = {'filename': None, 'full_path': f, 'batch': True, 'scale': scale, 'output_path': out_path + filename.strip()}
-                # stain_segmentation.CLI(args)
-                # downsample(path, filename)
                 if progressBar:
                     percent += increment
                     progressBar.setValue(percent)
@@ -60,4 +55,4 @@ if __name__ == '__main__':
     scale = 7 if not parse_batch_args()['scale'] else parse_batch_args()['scale']
     if path != None:
         segment_images(path, out_path, scale)
-        # crop(path, out_path)
+        # crop(path, out_path) # uncomment to crop rulers
